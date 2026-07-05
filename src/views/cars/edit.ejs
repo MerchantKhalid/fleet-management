@@ -1,0 +1,45 @@
+<%- include('../partials/head') %>
+
+<h1>Edit Car</h1>
+
+<div class="panel">
+  <form method="POST" action="/cars/<%= car.id %>?_method=PUT">
+    <div class="form-grid">
+      <div class="field"><label>Plate</label><input name="plate" value="<%= car.plate %>" required></div>
+      <div class="field"><label>Make</label><input name="make" value="<%= car.make %>" required></div>
+      <div class="field"><label>Model</label><input name="model" value="<%= car.model %>" required></div>
+      <div class="field">
+        <label>Fuel Type</label>
+        <select name="fuelType">
+          <% ['DIESEL','PETROL','HYBRID','ELECTRIC'].forEach(f => { %>
+            <option value="<%= f %>" <%= car.fuelType === f ? 'selected' : '' %>><%= f %></option>
+          <% }) %>
+        </select>
+      </div>
+      <div class="field"><label>Weekly Rental Cost</label><input name="weeklyRentalCost" type="number" step="0.01" value="<%= car.weeklyRentalCost %>"></div>
+      <div class="field">
+        <label>Status</label>
+        <select name="status">
+          <% ['ACTIVE','MAINTENANCE','RETIRED'].forEach(s => { %>
+            <option value="<%= s %>" <%= car.status === s ? 'selected' : '' %>><%= s %></option>
+          <% }) %>
+        </select>
+      </div>
+      <div class="field">
+        <label>Owner</label>
+        <select name="ownerId">
+          <option value="">Company</option>
+          <% owners.forEach(o => { %>
+            <option value="<%= o.id %>" <%= car.ownerId === o.id ? 'selected' : '' %>><%= o.name %></option>
+          <% }) %>
+        </select>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn" type="submit">Save Changes</button>
+      <a class="btn secondary" href="/cars">Cancel</a>
+    </div>
+  </form>
+</div>
+
+<%- include('../partials/foot') %>

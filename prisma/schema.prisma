@@ -1,0 +1,121 @@
+// Quick-start uses SQLite (zero setup). Switch provider to "postgresql"
+// and change Float fields to Decimal @db.Decimal(10,2) when you move to production.
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Driver {
+  id                   String    @id @default(cuid())
+  name                 String
+  phone                String?
+  nif                  String?   @unique
+  tvdeLicenseNumber    String?
+  tvdeExpiry           DateTime?
+  drivingLicenseExpiry DateTime?
+  status               String    @default("ACTIVE") // ACTIVE | INACTIVE
+  createdAt            DateTime  @default(now())
+
+  assignments          AssignmentHistory[]
+  settlements          WeeklySettlement[]
+  ivaRefunds           IvaRefund[]
+  currentCar           Car?      @relation("CurrentDriver")
+}
+
+model CarOwner {
+  id    String @id @default(cuid())
+  name  String
+  nif   String?
+  phone String?
+  cars  Car[]
+}
+
+model Car {
+  id               String    @id @default(cuid())
+  plate            String    @unique
+  make             String
+  model            String
+  fuelType         String    // DIESEL | ELECTRIC | HYBRID | PETROL
+  status           String    @default("ACTIVE") // ACTIVE | MAINTENANCE | RETIRED
+  weeklyRentalCost Float     @default(0)
+  ownerId          String?
+  owner            CarOwner? @relation(fields: [ownerId], references: [id])
+  currentDriverId  String?   @unique
+  currentDriver    Driver?   @relation("CurrentDriver", fields: [currentDriverId], references: [id])
+  createdAt        DateTime  @default(now())
+
+  assignments       AssignmentHistory[]
+  settlements       WeeklySettlement[]
+  insurancePolicies Insurance[]
+  maintenanceLogs   MaintenanceLog[]
+}
+
+model AssignmentHistory {
+  id        String    @id @default(cuid())
+  driverId  String
+  driver    Driver    @relation(fields: [driverId], references: [id])
+  carId     String
+  car       Car       @relation(fields: [carId], references: [id])
+  startDate DateTime  @default(now())
+  endDate   DateTime?
+}
+
+model WeeklySettlement {
+  id               String    @id @default(cuid())
+  driverId         String
+  driver           Driver    @relation(fields: [driverId], references: [id])
+  carId            String?
+  car              Car?      @relation(fields: [carId], references: [id])
+  weekStart        DateTime
+  weekEnd          DateTime
+  uberGross        Float     @default(0)
+  boltGross        Float     @default(0)
+  fleetCharge      Float     @default(0)
+  ivaWithheld      Float     @default(0)
+  fuelElectricCost Float     @default(0)
+  viaVerde         Float     @default(0)
+  otherDeductions  Float     @default(0)
+  netPaid          Float     @default(0)
+  status           String    @default("PENDING") // PENDING | PAID
+  paidAt           DateTime?
+  createdAt        DateTime  @default(now())
+}
+
+model IvaRefund {
+  id         String    @id @default(cuid())
+  driverId   String
+  driver     Driver    @relation(fields: [driverId], references: [id])
+  period     String
+  amount     Float
+  receiptRef String?
+  status     String    @default("WITHHELD") // WITHHELD | REFUNDED
+  refundedAt DateTime?
+}
+
+model Insurance {
+  id            String   @id @default(cuid())
+  carId         String
+  car           Car      @relation(fields: [carId], references: [id])
+  insurer       String
+  policyNumber  String?
+  cost          Float
+  billingPeriod String   // MONTHLY | QUARTERLY | SEMIANNUAL | ANNUAL
+  paidBy        String   @default("COMPANY") // COMPANY | CAR_OWNER
+  expiryDate    DateTime
+}
+
+model MaintenanceLog {
+  id             String    @id @default(cuid())
+  carId          String
+  car            Car       @relation(fields: [carId], references: [id])
+  date           DateTime  @default(now())
+  description    String
+  cost           Float
+  garage         String?
+  nextServiceDue DateTime?
+}

@@ -1,0 +1,39 @@
+<%- include('partials/head') %>
+
+<h1>Dashboard</h1>
+<div class="meta">Fleet overview</div>
+
+<div class="kpi-grid">
+  <div class="kpi"><div class="label">Active Drivers</div><div class="value"><%= activeDrivers %></div></div>
+  <div class="kpi"><div class="label">Active Cars</div><div class="value"><%= activeCars %></div></div>
+  <div class="kpi"><div class="label">Last 10 Settlements Total</div><div class="value">€<%= weekTotal.toFixed(2) %></div></div>
+</div>
+
+<div class="panel">
+  <div class="panel-head"><h3>Alerts (next 30 days)</h3></div>
+  <div style="padding:14px 16px;">
+    <% if (alerts.length === 0) { %>
+      <p style="color:var(--muted);">No upcoming expirations. You're clear for the next 30 days.</p>
+    <% } %>
+    <% alerts.forEach(a => { %>
+      <div class="alert"><%= a %></div>
+    <% }) %>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="panel-head"><h3>Recent Settlements</h3></div>
+  <table>
+    <tr><th>Driver</th><th>Week</th><th>Net Paid</th><th>Status</th></tr>
+    <% recentSettlements.forEach(s => { %>
+      <tr>
+        <td><%= s.driver.name %></td>
+        <td><%= s.weekStart.toISOString().slice(0,10) %></td>
+        <td>€<%= s.netPaid.toFixed(2) %></td>
+        <td><span class="badge <%= s.status === 'PAID' ? 'ok' : 'warn' %>"><%= s.status %></span></td>
+      </tr>
+    <% }) %>
+  </table>
+</div>
+
+<%- include('partials/foot') %>

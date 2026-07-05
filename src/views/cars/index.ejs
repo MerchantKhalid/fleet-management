@@ -1,0 +1,69 @@
+<%- include('../partials/head') %>
+
+<h1>Cars</h1>
+<div class="meta"><%= cars.length %> total</div>
+
+<% if (error) { %><div class="error"><%= error %></div><% } %>
+
+<div class="panel">
+  <div class="panel-head"><h3>Add Car</h3></div>
+  <form method="POST" action="/cars">
+    <div class="form-grid">
+      <div class="field"><label>Plate</label><input name="plate" required></div>
+      <div class="field"><label>Make</label><input name="make" required></div>
+      <div class="field"><label>Model</label><input name="model" required></div>
+      <div class="field">
+        <label>Fuel Type</label>
+        <select name="fuelType">
+          <option value="DIESEL">Diesel</option>
+          <option value="PETROL">Petrol</option>
+          <option value="HYBRID">Hybrid</option>
+          <option value="ELECTRIC">Electric</option>
+        </select>
+      </div>
+      <div class="field"><label>Weekly Rental Cost</label><input name="weeklyRentalCost" type="number" step="0.01"></div>
+      <div class="field">
+        <label>Owner (leave blank if company-owned)</label>
+        <select name="ownerId">
+          <option value="">Company</option>
+          <% owners.forEach(o => { %><option value="<%= o.id %>"><%= o.name %></option><% }) %>
+        </select>
+      </div>
+    </div>
+    <div class="form-actions"><button class="btn" type="submit">Add Car</button></div>
+  </form>
+</div>
+
+<div class="panel">
+  <div class="panel-head"><h3>All Cars</h3></div>
+  <table>
+    <tr><th>Plate</th><th>Model</th><th>Assigned Driver</th><th>Weekly Rental</th><th>Status</th><th>Assign</th><th></th></tr>
+    <% cars.forEach(c => { %>
+      <tr>
+        <td><%= c.plate %></td>
+        <td><%= c.make %> <%= c.model %></td>
+        <td><%= c.currentDriver ? c.currentDriver.name : '- unassigned -' %></td>
+        <td>€<%= c.weeklyRentalCost.toFixed(2) %></td>
+        <td><span class="badge <%= c.status === 'ACTIVE' ? 'ok' : (c.status === 'MAINTENANCE' ? 'warn' : 'danger') %>"><%= c.status %></span></td>
+        <td>
+          <form class="inline-form" method="POST" action="/cars/<%= c.id %>/assign">
+            <select name="driverId" onchange="this.form.submit()">
+              <option value="">-- unassign --</option>
+              <% drivers.forEach(d => { %>
+                <option value="<%= d.id %>" <%= c.currentDriver && c.currentDriver.id === d.id ? 'selected' : '' %>><%= d.name %></option>
+              <% }) %>
+            </select>
+          </form>
+        </td>
+        <td>
+          <a class="btn secondary" href="/cars/<%= c.id %>/edit">Edit</a>
+          <form class="inline-form" method="POST" action="/cars/<%= c.id %>?_method=DELETE" onsubmit="return confirm('Delete this car?');">
+            <button class="btn danger" type="submit">Delete</button>
+          </form>
+        </td>
+      </tr>
+    <% }) %>
+  </table>
+</div>
+
+<%- include('../partials/foot') %>

@@ -1,0 +1,25 @@
+{
+  "name": "tvde-fleet-manager",
+  "version": "1.0.0",
+  "description": "Fleet management app for TVDE drivers (Uber/Bolt) in Portugal",
+  "main": "src/app.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "node --watch src/app.js",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:studio": "prisma studio",
+    "seed": "node prisma/seed.js"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.16.0",
+    "dayjs": "^1.11.11",
+    "dotenv": "^16.4.5",
+    "ejs": "^3.1.10",
+    "express": "^4.19.2",
+    "method-override": "^3.0.0",
+    "pdfkit": "^0.15.0"
+  },
+  "devDependencies": {
+    "prisma": "^5.16.0"
+  }
+}

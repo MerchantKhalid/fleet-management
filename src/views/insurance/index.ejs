@@ -1,0 +1,62 @@
+<%- include('../partials/head') %>
+
+<h1>Insurance</h1>
+<div class="meta"><%= policies.length %> policies</div>
+
+<div class="panel">
+  <div class="panel-head"><h3>Add Policy</h3></div>
+  <form method="POST" action="/insurance">
+    <div class="form-grid">
+      <div class="field">
+        <label>Car</label>
+        <select name="carId" required>
+          <% cars.forEach(c => { %><option value="<%= c.id %>"><%= c.plate %></option><% }) %>
+        </select>
+      </div>
+      <div class="field"><label>Insurer</label><input name="insurer" required></div>
+      <div class="field"><label>Policy Number</label><input name="policyNumber"></div>
+      <div class="field"><label>Cost</label><input type="number" step="0.01" name="cost" required></div>
+      <div class="field">
+        <label>Billing Period</label>
+        <select name="billingPeriod">
+          <option value="MONTHLY">Monthly</option>
+          <option value="QUARTERLY">3 Months</option>
+          <option value="SEMIANNUAL">6 Months</option>
+          <option value="ANNUAL">12 Months</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Paid By</label>
+        <select name="paidBy">
+          <option value="COMPANY">Company</option>
+          <option value="CAR_OWNER">Car Owner</option>
+        </select>
+      </div>
+      <div class="field"><label>Expiry Date</label><input type="date" name="expiryDate" required></div>
+    </div>
+    <div class="form-actions"><button class="btn" type="submit">Save Policy</button></div>
+  </form>
+</div>
+
+<div class="panel">
+  <table>
+    <tr><th>Car</th><th>Insurer</th><th>Billed Every</th><th>Paid By</th><th>Expiry</th><th>Cost</th><th></th></tr>
+    <% policies.forEach(p => { %>
+      <tr>
+        <td><%= p.car.plate %></td>
+        <td><%= p.insurer %></td>
+        <td><%= p.billingPeriod %></td>
+        <td><span class="badge info"><%= p.paidBy === 'COMPANY' ? 'Company' : 'Car Owner' %></span></td>
+        <td><%= p.expiryDate.toISOString().slice(0,10) %></td>
+        <td>€<%= p.cost.toFixed(2) %></td>
+        <td>
+          <form class="inline-form" method="POST" action="/insurance/<%= p.id %>?_method=DELETE" onsubmit="return confirm('Delete this policy?');">
+            <button class="btn danger" type="submit">Delete</button>
+          </form>
+        </td>
+      </tr>
+    <% }) %>
+  </table>
+</div>
+
+<%- include('../partials/foot') %>

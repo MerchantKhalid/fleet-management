@@ -1,0 +1,29 @@
+<%- include('../partials/head') %>
+
+<h1>IVA Refunds</h1>
+<div class="meta">6% withheld weekly, refunded once the driver issues the green receipt</div>
+
+<div class="panel">
+  <table>
+    <tr><th>Driver</th><th>Period</th><th>Amount Withheld</th><th>Receipt Ref</th><th>Status</th><th></th></tr>
+    <% refunds.forEach(r => { %>
+      <tr>
+        <td><%= r.driver.name %></td>
+        <td><%= r.period %></td>
+        <td>€<%= r.amount.toFixed(2) %></td>
+        <td><%= r.receiptRef || '-' %></td>
+        <td><span class="badge <%= r.status === 'REFUNDED' ? 'ok' : 'warn' %>"><%= r.status %></span></td>
+        <td>
+          <% if (r.status === 'WITHHELD') { %>
+            <form class="inline-form" method="POST" action="/iva-refunds/<%= r.id %>/refund">
+              <input name="receiptRef" placeholder="Receipt reference" style="background:var(--surface-2); border:1px solid var(--line); border-radius:6px; color:var(--text); padding:5px 8px; font-size:12px;">
+              <button class="btn" type="submit">Mark Refunded</button>
+            </form>
+          <% } %>
+        </td>
+      </tr>
+    <% }) %>
+  </table>
+</div>
+
+<%- include('../partials/foot') %>

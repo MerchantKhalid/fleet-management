@@ -1,0 +1,38 @@
+<%- include('partials/head') %>
+
+<h1>Export Records</h1>
+<div class="meta">Download settlements for your own bookkeeping</div>
+
+<div class="panel">
+  <div class="panel-head"><h3>Download CSV</h3></div>
+  <form method="GET" action="/export/csv">
+    <div class="form-grid">
+      <div class="field"><label>Week Start (optional)</label><input type="date" name="weekStart"></div>
+      <div class="field">
+        <label>Driver (optional)</label>
+        <select name="driverId">
+          <option value="">All Drivers</option>
+          <% drivers.forEach(d => { %><option value="<%= d.id %>"><%= d.name %></option><% }) %>
+        </select>
+      </div>
+    </div>
+    <div class="form-actions"><button class="btn" type="submit">⇩ Download CSV</button></div>
+  </form>
+</div>
+
+<div class="panel">
+  <div class="panel-head"><h3>PDF Payslips</h3></div>
+  <table>
+    <tr><th>Driver</th><th>Week</th><th>Net Paid</th><th></th></tr>
+    <% settlements.forEach(s => { %>
+      <tr>
+        <td><%= s.driver.name %></td>
+        <td><%= s.weekStart.toISOString().slice(0,10) %></td>
+        <td>€<%= s.netPaid.toFixed(2) %></td>
+        <td><a class="btn secondary" href="/export/pdf/<%= s.id %>">⇩ PDF</a></td>
+      </tr>
+    <% }) %>
+  </table>
+</div>
+
+<%- include('partials/foot') %>
