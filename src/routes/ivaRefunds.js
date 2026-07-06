@@ -11,10 +11,14 @@ router.get('/', async (req, res) => {
 });
 
 router.post('/:id/refund', async (req, res) => {
-  const { receiptRef } = req.body;
+  const { receiptRef, refundDate } = req.body;
   await prisma.ivaRefund.update({
     where: { id: req.params.id },
-    data: { status: 'REFUNDED', refundedAt: new Date(), receiptRef: receiptRef || null },
+    data: {
+      status: 'REFUNDED',
+      refundedAt: refundDate ? new Date(refundDate) : new Date(),
+      receiptRef: receiptRef || null,
+    },
   });
   res.redirect('/iva-refunds');
 });

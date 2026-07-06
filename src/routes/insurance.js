@@ -11,7 +11,7 @@ router.get('/', async (req, res) => {
 });
 
 router.post('/', async (req, res) => {
-  const { carId, insurer, policyNumber, cost, billingPeriod, paidBy, expiryDate } = req.body;
+  const { carId, insurer, policyNumber, cost, billingPeriod, paidBy, startDate, expiryDate, cartaVerdeEndDate } = req.body;
   await prisma.insurance.create({
     data: {
       carId,
@@ -20,7 +20,9 @@ router.post('/', async (req, res) => {
       cost: Number(cost || 0),
       billingPeriod,
       paidBy,
+      startDate: startDate ? new Date(startDate) : null,
       expiryDate: new Date(expiryDate),
+      cartaVerdeEndDate: cartaVerdeEndDate ? new Date(cartaVerdeEndDate) : null,
     },
   });
   res.redirect('/insurance');

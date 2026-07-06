@@ -50,6 +50,8 @@ async function createSettlement(input) {
     data: {
       driverId: input.driverId,
       period,
+      periodStart: new Date(input.weekStart),
+      periodEnd: new Date(input.weekEnd),
       amount: ivaWithheld,
       status: 'WITHHELD',
     },

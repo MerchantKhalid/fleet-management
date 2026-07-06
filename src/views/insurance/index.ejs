@@ -13,9 +13,11 @@
           <% cars.forEach(c => { %><option value="<%= c.id %>"><%= c.plate %></option><% }) %>
         </select>
       </div>
-      <div class="field"><label>Insurer</label><input name="insurer" required></div>
-      <div class="field"><label>Policy Number</label><input name="policyNumber"></div>
+      <div class="field"><label>Insurance Company Name</label><input name="insurer" required></div>
       <div class="field"><label>Cost</label><input type="number" step="0.01" name="cost" required></div>
+      <div class="field"><label>Carta Verde End Date</label><input type="date" name="cartaVerdeEndDate"></div>
+      <div class="field"><label>Start Date</label><input type="date" name="startDate"></div>
+      <div class="field"><label>Insurance Issuer Number</label><input name="policyNumber"></div>
       <div class="field">
         <label>Billing Period</label>
         <select name="billingPeriod">
@@ -32,7 +34,7 @@
           <option value="CAR_OWNER">Car Owner</option>
         </select>
       </div>
-      <div class="field"><label>Expiry Date</label><input type="date" name="expiryDate" required></div>
+      <div class="field"><label>Policy Expiry Date</label><input type="date" name="expiryDate" required></div>
     </div>
     <div class="form-actions"><button class="btn" type="submit">Save Policy</button></div>
   </form>
@@ -40,14 +42,24 @@
 
 <div class="panel">
   <table>
-    <tr><th>Car</th><th>Insurer</th><th>Billed Every</th><th>Paid By</th><th>Expiry</th><th>Cost</th><th></th></tr>
+    <tr><th>Car</th><th>Insurer</th><th>Issuer Number</th><th>Billed Every</th><th>Paid By</th><th>Start</th><th>Policy Expiry</th><th>Carta Verde End</th><th>Cost</th><th></th></tr>
     <% policies.forEach(p => { %>
+      <% const cvDaysLeft = p.cartaVerdeEndDate ? Math.ceil((p.cartaVerdeEndDate - new Date()) / 86400000) : null; %>
       <tr>
         <td><%= p.car.plate %></td>
         <td><%= p.insurer %></td>
+        <td><%= p.policyNumber || '-' %></td>
         <td><%= p.billingPeriod %></td>
         <td><span class="badge info"><%= p.paidBy === 'COMPANY' ? 'Company' : 'Car Owner' %></span></td>
+        <td><%= p.startDate ? p.startDate.toISOString().slice(0,10) : '-' %></td>
         <td><%= p.expiryDate.toISOString().slice(0,10) %></td>
+        <td>
+          <% if (p.cartaVerdeEndDate) { %>
+            <span class="badge <%= cvDaysLeft <= 7 ? 'danger' : 'ok' %>">
+              <%= p.cartaVerdeEndDate.toISOString().slice(0,10) %><% if (cvDaysLeft <= 7) { %> (⚠ <%= cvDaysLeft %>d)<% } %>
+            </span>
+          <% } else { %>-<% } %>
+        </td>
         <td>€<%= p.cost.toFixed(2) %></td>
         <td>
           <form class="inline-form" method="POST" action="/insurance/<%= p.id %>?_method=DELETE" onsubmit="return confirm('Delete this policy?');">

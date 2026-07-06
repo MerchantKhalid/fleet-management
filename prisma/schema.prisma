@@ -18,12 +18,14 @@ model Driver {
   tvdeLicenseNumber    String?
   tvdeExpiry           DateTime?
   drivingLicenseExpiry DateTime?
+  carOwnership         String?   // OWNED | RENT — whether the driver's car is company-owned or a rented car
   status               String    @default("ACTIVE") // ACTIVE | INACTIVE
   createdAt            DateTime  @default(now())
 
   assignments          AssignmentHistory[]
   settlements          WeeklySettlement[]
   ivaRefunds           IvaRefund[]
+  accidents            AccidentHistory[]
   currentCar           Car?      @relation("CurrentDriver")
 }
 
@@ -53,6 +55,7 @@ model Car {
   settlements       WeeklySettlement[]
   insurancePolicies Insurance[]
   maintenanceLogs   MaintenanceLog[]
+  accidents         AccidentHistory[]
 }
 
 model AssignmentHistory {
@@ -87,26 +90,30 @@ model WeeklySettlement {
 }
 
 model IvaRefund {
-  id         String    @id @default(cuid())
-  driverId   String
-  driver     Driver    @relation(fields: [driverId], references: [id])
-  period     String
-  amount     Float
-  receiptRef String?
-  status     String    @default("WITHHELD") // WITHHELD | REFUNDED
-  refundedAt DateTime?
+  id          String    @id @default(cuid())
+  driverId    String
+  driver      Driver    @relation(fields: [driverId], references: [id])
+  period      String
+  periodStart DateTime? // first working day of the IVA period (e.g. 05-11-2026)
+  periodEnd   DateTime? // last working day of the IVA period (e.g. 12-11-2026)
+  amount      Float
+  receiptRef  String?
+  status      String    @default("WITHHELD") // WITHHELD | REFUNDED
+  refundedAt  DateTime? // date the fleet actually refunded the IVA to the driver
 }
 
 model Insurance {
-  id            String   @id @default(cuid())
-  carId         String
-  car           Car      @relation(fields: [carId], references: [id])
-  insurer       String
-  policyNumber  String?
-  cost          Float
-  billingPeriod String   // MONTHLY | QUARTERLY | SEMIANNUAL | ANNUAL
-  paidBy        String   @default("COMPANY") // COMPANY | CAR_OWNER
-  expiryDate    DateTime
+  id                String    @id @default(cuid())
+  carId             String
+  car               Car       @relation(fields: [carId], references: [id])
+  insurer           String
+  policyNumber      String?   // insurance issuer number
+  cost              Float
+  billingPeriod     String    // MONTHLY | QUARTERLY | SEMIANNUAL | ANNUAL
+  paidBy            String    @default("COMPANY") // COMPANY | CAR_OWNER
+  startDate         DateTime? // policy start date
+  expiryDate        DateTime  // policy end date
+  cartaVerdeEndDate DateTime? // carta verde (green card) end date — warn at least 7 days before
 }
 
 model MaintenanceLog {
@@ -118,4 +125,19 @@ model MaintenanceLog {
   cost           Float
   garage         String?
   nextServiceDue DateTime?
+}
+
+model AccidentHistory {
+  id                   String    @id @default(cuid())
+  carId                String
+  car                  Car       @relation(fields: [carId], references: [id])
+  driverId             String?
+  driver               Driver?   @relation(fields: [driverId], references: [id])
+  date                 DateTime
+  place                String?
+  driverNumber         String?   // our driver's license/TVDE number at the time of the accident
+  opponentDriverNumber String?   // other party's driver/license number, if available
+  opponentCarPlate     String?   // other party's car plate, if available
+  notes                String?
+  createdAt            DateTime  @default(now())
 }

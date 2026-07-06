@@ -13,9 +13,12 @@ router.get('/', async (req, res) => {
 
 // CREATE
 router.post('/', async (req, res) => {
-  const { name, phone, nif, tvdeLicenseNumber, tvdeExpiry, drivingLicenseExpiry } = req.body;
+  const {
+    name, phone, nif, tvdeLicenseNumber, tvdeExpiry, drivingLicenseExpiry, carOwnership,
+    carMake, carModel, carPlate, carFuelType, carWeeklyRentalCost, carOwnerName,
+  } = req.body;
   try {
-    await prisma.driver.create({
+    const driver = await prisma.driver.create({
       data: {
         name,
         phone: phone || null,
@@ -23,12 +26,38 @@ router.post('/', async (req, res) => {
         tvdeLicenseNumber: tvdeLicenseNumber || null,
         tvdeExpiry: tvdeExpiry ? new Date(tvdeExpiry) : null,
         drivingLicenseExpiry: drivingLicenseExpiry ? new Date(drivingLicenseExpiry) : null,
+        carOwnership: carOwnership || null,
       },
     });
+
+    // Optional: create & assign a car for this driver in the same step
+    if (carPlate) {
+      let ownerId = null;
+      if (carOwnerName) {
+        const existingOwner = await prisma.carOwner.findFirst({ where: { name: carOwnerName } });
+        const owner = existingOwner || (await prisma.carOwner.create({ data: { name: carOwnerName } }));
+        ownerId = owner.id;
+      }
+
+      const car = await prisma.car.create({
+        data: {
+          plate: carPlate,
+          make: carMake || '',
+          model: carModel || '',
+          fuelType: carFuelType || 'PETROL',
+          weeklyRentalCost: Number(carWeeklyRentalCost || 0),
+          ownerId,
+          currentDriverId: driver.id,
+        },
+      });
+
+      await prisma.assignmentHistory.create({ data: { carId: car.id, driverId: driver.id } });
+    }
+
     res.redirect('/drivers');
   } catch (err) {
     const drivers = await prisma.driver.findMany({ include: { currentCar: true } });
-    res.render('drivers/index', { drivers, error: 'Could not add driver. Check the NIF is not already used.' });
+    res.render('drivers/index', { drivers, error: 'Could not add driver. Check the NIF and car plate are not already used.' });
   }
 });
 
@@ -41,7 +70,7 @@ router.get('/:id/edit', async (req, res) => {
 
 // UPDATE
 router.put('/:id', async (req, res) => {
-  const { name, phone, nif, tvdeLicenseNumber, tvdeExpiry, drivingLicenseExpiry, status } = req.body;
+  const { name, phone, nif, tvdeLicenseNumber, tvdeExpiry, drivingLicenseExpiry, carOwnership, status } = req.body;
   await prisma.driver.update({
     where: { id: req.params.id },
     data: {
@@ -51,6 +80,7 @@ router.put('/:id', async (req, res) => {
       tvdeLicenseNumber: tvdeLicenseNumber || null,
       tvdeExpiry: tvdeExpiry ? new Date(tvdeExpiry) : null,
       drivingLicenseExpiry: drivingLicenseExpiry ? new Date(drivingLicenseExpiry) : null,
+      carOwnership: carOwnership || null,
       status,
     },
   });

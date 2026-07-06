@@ -11,11 +11,38 @@
     <div class="form-grid">
       <div class="field"><label>Name</label><input name="name" required></div>
       <div class="field"><label>Phone</label><input name="phone"></div>
+      <div class="field">
+        <label>Car is Owned or Rent</label>
+        <select name="carOwnership">
+          <option value="">-- select --</option>
+          <option value="OWNED">Owned Car</option>
+          <option value="RENT">Rent</option>
+        </select>
+      </div>
       <div class="field"><label>NIF</label><input name="nif"></div>
       <div class="field"><label>TVDE License Number</label><input name="tvdeLicenseNumber"></div>
       <div class="field"><label>TVDE Expiry</label><input type="date" name="tvdeExpiry"></div>
       <div class="field"><label>Driving License Expiry</label><input type="date" name="drivingLicenseExpiry"></div>
     </div>
+
+    <div class="panel-head" style="margin-top:16px;"><h3>Add a Car for this Driver (optional)</h3></div>
+    <div class="form-grid">
+      <div class="field"><label>Car Make</label><input name="carMake"></div>
+      <div class="field"><label>Model</label><input name="carModel"></div>
+      <div class="field"><label>Plate</label><input name="carPlate"></div>
+      <div class="field">
+        <label>Fuel Type</label>
+        <select name="carFuelType">
+          <option value="DIESEL">Diesel</option>
+          <option value="PETROL">Petrol</option>
+          <option value="HYBRID">Hybrid</option>
+          <option value="ELECTRIC">Electric</option>
+        </select>
+      </div>
+      <div class="field"><label>Weekly Rental Cost</label><input name="carWeeklyRentalCost" type="number" step="0.01"></div>
+      <div class="field"><label>Car Owner Name</label><input name="carOwnerName" placeholder="Leave blank if company-owned"></div>
+    </div>
+
     <div class="form-actions"><button class="btn" type="submit">Add Driver</button></div>
   </form>
 </div>
@@ -23,11 +50,12 @@
 <div class="panel">
   <div class="panel-head"><h3>All Drivers</h3></div>
   <table>
-    <tr><th>Name</th><th>Phone</th><th>Assigned Car</th><th>TVDE Expiry</th><th>License Expiry</th><th>Status</th><th></th></tr>
+    <tr><th>Name</th><th>Phone</th><th>Car Ownership</th><th>Assigned Car</th><th>TVDE Expiry</th><th>License Expiry</th><th>Status</th><th></th></tr>
     <% drivers.forEach(d => { %>
       <tr>
         <td><%= d.name %></td>
         <td><%= d.phone || '-' %></td>
+        <td><%= d.carOwnership === 'OWNED' ? 'Owned Car' : (d.carOwnership === 'RENT' ? 'Rent' : '-') %></td>
         <td><%= d.currentCar ? d.currentCar.plate : '-' %></td>
         <td><%= d.tvdeExpiry ? d.tvdeExpiry.toISOString().slice(0,10) : '-' %></td>
         <td><%= d.drivingLicenseExpiry ? d.drivingLicenseExpiry.toISOString().slice(0,10) : '-' %></td>

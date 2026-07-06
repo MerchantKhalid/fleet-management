@@ -1,0 +1,64 @@
+<%- include('../partials/head') %>
+
+<h1>Accident History</h1>
+<div class="meta"><%= accidents.length %> recorded</div>
+
+<% if (error) { %><div class="error"><%= error %></div><% } %>
+
+<div class="panel">
+  <div class="panel-head"><h3>Add Accident Record</h3></div>
+  <form method="POST" action="/accidents">
+    <div class="form-grid">
+      <div class="field">
+        <label>Car (Plate)</label>
+        <select name="carId" required>
+          <option value="">-- select car --</option>
+          <% cars.forEach(c => { %><option value="<%= c.id %>"><%= c.plate %> (<%= c.make %> <%= c.model %>)</option><% }) %>
+        </select>
+      </div>
+      <div class="field">
+        <label>Driver</label>
+        <select name="driverId">
+          <option value="">-- unknown / not applicable --</option>
+          <% drivers.forEach(d => { %><option value="<%= d.id %>"><%= d.name %></option><% }) %>
+        </select>
+      </div>
+      <div class="field"><label>Date</label><input type="date" name="date" required></div>
+      <div class="field"><label>Place</label><input name="place" placeholder="e.g. Lisbon, Av. da Liberdade"></div>
+      <div class="field"><label>Driver Number</label><input name="driverNumber" placeholder="Our driver's license/TVDE number"></div>
+      <div class="field"><label>Opponent Driver Number</label><input name="opponentDriverNumber" placeholder="If available"></div>
+      <div class="field"><label>Opponent Car Plate</label><input name="opponentCarPlate" placeholder="If available"></div>
+      <div class="field" style="grid-column: 1 / -1;"><label>Notes</label><input name="notes" placeholder="Optional details about the accident"></div>
+    </div>
+    <div class="form-actions"><button class="btn" type="submit">Add Accident Record</button></div>
+  </form>
+</div>
+
+<div class="panel">
+  <div class="panel-head"><h3>All Accidents</h3></div>
+  <table>
+    <tr>
+      <th>Car (Plate)</th><th>Driver</th><th>Date</th><th>Place</th><th>Driver Number</th>
+      <th>Opponent Driver Number</th><th>Opponent Plate</th><th>Notes</th><th></th>
+    </tr>
+    <% accidents.forEach(a => { %>
+      <tr>
+        <td><%= a.car.plate %></td>
+        <td><%= a.driver ? a.driver.name : '-' %></td>
+        <td><%= a.date.toISOString().slice(0,10) %></td>
+        <td><%= a.place || '-' %></td>
+        <td><%= a.driverNumber || '-' %></td>
+        <td><%= a.opponentDriverNumber || '-' %></td>
+        <td><%= a.opponentCarPlate || '-' %></td>
+        <td><%= a.notes || '-' %></td>
+        <td>
+          <form class="inline-form" method="POST" action="/accidents/<%= a.id %>?_method=DELETE" onsubmit="return confirm('Delete this accident record?');">
+            <button class="btn danger" type="submit">Delete</button>
+          </form>
+        </td>
+      </tr>
+    <% }) %>
+  </table>
+</div>
+
+<%- include('../partials/foot') %>
