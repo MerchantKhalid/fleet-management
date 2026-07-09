@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const prisma = require('../db');
 
-// LIST + ADD FORM
+// LIST
 router.get('/', async (req, res) => {
   const drivers = await prisma.driver.findMany({
     include: { currentCar: true },
@@ -11,10 +11,15 @@ router.get('/', async (req, res) => {
   res.render('drivers/index', { drivers, error: null });
 });
 
+// ADD FORM (its own page)
+router.get('/new', (req, res) => {
+  res.render('drivers/new', { error: null });
+});
+
 // CREATE
 router.post('/', async (req, res) => {
   const {
-    name, phone, nif, tvdeLicenseNumber, tvdeExpiry, drivingLicenseExpiry, carOwnership,
+    name, phone, email, iban, carOwnership,
     carMake, carModel, carPlate, carFuelType, carWeeklyRentalCost, carOwnerName,
   } = req.body;
   try {
@@ -22,10 +27,8 @@ router.post('/', async (req, res) => {
       data: {
         name,
         phone: phone || null,
-        nif: nif || null,
-        tvdeLicenseNumber: tvdeLicenseNumber || null,
-        tvdeExpiry: tvdeExpiry ? new Date(tvdeExpiry) : null,
-        drivingLicenseExpiry: drivingLicenseExpiry ? new Date(drivingLicenseExpiry) : null,
+        email: email || null,
+        iban: iban || null,
         carOwnership: carOwnership || null,
       },
     });
@@ -54,11 +57,21 @@ router.post('/', async (req, res) => {
       await prisma.assignmentHistory.create({ data: { carId: car.id, driverId: driver.id } });
     }
 
+    // After adding, go to the drivers list (a different page than the add form)
     res.redirect('/drivers');
   } catch (err) {
-    const drivers = await prisma.driver.findMany({ include: { currentCar: true } });
-    res.render('drivers/index', { drivers, error: 'Could not add driver. Check the NIF and car plate are not already used.' });
+    res.render('drivers/new', { error: 'Could not add driver. Check the car plate is not already used.' });
   }
+});
+
+// DETAIL (shows IBAN, email, etc.)
+router.get('/:id', async (req, res) => {
+  const driver = await prisma.driver.findUnique({
+    where: { id: req.params.id },
+    include: { currentCar: true },
+  });
+  if (!driver) return res.redirect('/drivers');
+  res.render('drivers/show', { driver });
 });
 
 // EDIT FORM
@@ -70,21 +83,19 @@ router.get('/:id/edit', async (req, res) => {
 
 // UPDATE
 router.put('/:id', async (req, res) => {
-  const { name, phone, nif, tvdeLicenseNumber, tvdeExpiry, drivingLicenseExpiry, carOwnership, status } = req.body;
+  const { name, phone, email, iban, carOwnership, status } = req.body;
   await prisma.driver.update({
     where: { id: req.params.id },
     data: {
       name,
       phone: phone || null,
-      nif: nif || null,
-      tvdeLicenseNumber: tvdeLicenseNumber || null,
-      tvdeExpiry: tvdeExpiry ? new Date(tvdeExpiry) : null,
-      drivingLicenseExpiry: drivingLicenseExpiry ? new Date(drivingLicenseExpiry) : null,
+      email: email || null,
+      iban: iban || null,
       carOwnership: carOwnership || null,
       status,
     },
   });
-  res.redirect('/drivers');
+  res.redirect('/drivers/' + req.params.id);
 });
 
 // DELETE (or deactivate if it has history)

@@ -1,3 +1,9 @@
+
+
+
+
+
+
 // Quick-start uses SQLite (zero setup). Switch provider to "postgresql"
 // and change Float fields to Decimal @db.Decimal(10,2) when you move to production.
 
@@ -14,10 +20,8 @@ model Driver {
   id                   String    @id @default(cuid())
   name                 String
   phone                String?
-  nif                  String?   @unique
-  tvdeLicenseNumber    String?
-  tvdeExpiry           DateTime?
-  drivingLicenseExpiry DateTime?
+  email                String?
+  iban                 String?
   carOwnership         String?   // OWNED | RENT — whether the driver's car is company-owned or a rented car
   status               String    @default("ACTIVE") // ACTIVE | INACTIVE
   createdAt            DateTime  @default(now())

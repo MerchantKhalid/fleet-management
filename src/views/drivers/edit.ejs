@@ -7,6 +7,8 @@
     <div class="form-grid">
       <div class="field"><label>Name</label><input name="name" value="<%= driver.name %>" required></div>
       <div class="field"><label>Phone</label><input name="phone" value="<%= driver.phone || '' %>"></div>
+      <div class="field"><label>Email</label><input type="email" name="email" value="<%= driver.email || '' %>"></div>
+      <div class="field"><label>IBAN</label><input name="iban" value="<%= driver.iban || '' %>"></div>
       <div class="field">
         <label>Car is Owned or Rent</label>
         <select name="carOwnership">
@@ -15,10 +17,6 @@
           <option value="RENT" <%= driver.carOwnership === 'RENT' ? 'selected' : '' %>>Rent</option>
         </select>
       </div>
-      <div class="field"><label>NIF</label><input name="nif" value="<%= driver.nif || '' %>"></div>
-      <div class="field"><label>TVDE License Number</label><input name="tvdeLicenseNumber" value="<%= driver.tvdeLicenseNumber || '' %>"></div>
-      <div class="field"><label>TVDE Expiry</label><input type="date" name="tvdeExpiry" value="<%= driver.tvdeExpiry ? driver.tvdeExpiry.toISOString().slice(0,10) : '' %>"></div>
-      <div class="field"><label>Driving License Expiry</label><input type="date" name="drivingLicenseExpiry" value="<%= driver.drivingLicenseExpiry ? driver.drivingLicenseExpiry.toISOString().slice(0,10) : '' %>"></div>
       <div class="field">
         <label>Status</label>
         <select name="status">
@@ -29,7 +27,7 @@
     </div>
     <div class="form-actions">
       <button class="btn" type="submit">Save Changes</button>
-      <a class="btn secondary" href="/drivers">Cancel</a>
+      <a class="btn secondary" href="/drivers/<%= driver.id %>">Cancel</a>
     </div>
   </form>
 </div>

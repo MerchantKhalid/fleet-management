@@ -1,0 +1,50 @@
+<%- include('../partials/head') %>
+
+<h1>Add Driver</h1>
+
+<% if (error) { %><div class="error"><%= error %></div><% } %>
+
+<div class="panel">
+  <div class="panel-head"><h3>Driver Details</h3></div>
+  <form method="POST" action="/drivers">
+    <div class="form-grid">
+      <div class="field"><label>Name</label><input name="name" required></div>
+      <div class="field"><label>Phone</label><input name="phone"></div>
+      <div class="field"><label>Email</label><input type="email" name="email"></div>
+      <div class="field"><label>IBAN</label><input name="iban" placeholder="PT50 ...."></div>
+      <div class="field">
+        <label>Car is Owned or Rent</label>
+        <select name="carOwnership">
+          <option value="">-- select --</option>
+          <option value="OWNED">Owned Car</option>
+          <option value="RENT">Rent</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="panel-head" style="margin-top:16px;"><h3>Add a Car for this Driver (optional)</h3></div>
+    <div class="form-grid">
+      <div class="field"><label>Car Make</label><input name="carMake"></div>
+      <div class="field"><label>Model</label><input name="carModel"></div>
+      <div class="field"><label>Plate</label><input name="carPlate"></div>
+      <div class="field">
+        <label>Fuel Type</label>
+        <select name="carFuelType">
+          <option value="DIESEL">Diesel</option>
+          <option value="PETROL">Petrol</option>
+          <option value="HYBRID">Hybrid</option>
+          <option value="ELECTRIC">Electric</option>
+        </select>
+      </div>
+      <div class="field"><label>Weekly Rental Cost</label><input name="carWeeklyRentalCost" type="number" step="0.01"></div>
+      <div class="field"><label>Car Owner Name</label><input name="carOwnerName" placeholder="Leave blank if company-owned"></div>
+    </div>
+
+    <div class="form-actions">
+      <button class="btn" type="submit">Add Driver</button>
+      <a class="btn secondary" href="/drivers">Cancel</a>
+    </div>
+  </form>
+</div>
+
+<%- include('../partials/foot') %>

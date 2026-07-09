@@ -6,10 +6,8 @@ async function main() {
     data: {
       name: 'João Ribeiro',
       phone: '912345678',
-      nif: '231445902',
-      tvdeLicenseNumber: 'TVDE-0001',
-      tvdeExpiry: new Date('2026-11-14'),
-      drivingLicenseExpiry: new Date('2028-03-03'),
+      email: 'joao.ribeiro@example.com',
+      iban: 'PT50000201231234567890154',
       status: 'ACTIVE',
     },
   });
@@ -18,10 +16,8 @@ async function main() {
     data: {
       name: 'Sofia Matias',
       phone: '913456789',
-      nif: '198774220',
-      tvdeLicenseNumber: 'TVDE-0002',
-      tvdeExpiry: new Date('2026-09-02'),
-      drivingLicenseExpiry: new Date('2026-08-03'),
+      email: 'sofia.matias@example.com',
+      iban: 'PT50003506434567890123489',
       status: 'ACTIVE',
     },
   });
