@@ -36,6 +36,14 @@
 
 <div class="panel">
   <div class="panel-head"><h3>Settlement History</h3></div>
+  <form method="GET" action="/settlements" class="form-grid" style="padding:14px 16px 0;">
+    <div class="field"><label>From (week start)</label><input type="date" name="from" value="<%= from %>"></div>
+    <div class="field"><label>To (week start)</label><input type="date" name="to" value="<%= to %>"></div>
+    <div class="field" style="align-self:flex-end;">
+      <button class="btn" type="submit">Filter</button>
+      <% if (from || to) { %> <a class="btn secondary" href="/settlements">Clear</a> <% } %>
+    </div>
+  </form>
   <table>
     <tr><th>Driver</th><th>Week</th><th>Gross</th><th>Fleet Charge</th><th>IVA</th><th>Fuel/Elec</th><th>Via Verde</th><th>Net Paid</th><th>Status</th><th></th></tr>
     <% settlements.forEach(s => { %>

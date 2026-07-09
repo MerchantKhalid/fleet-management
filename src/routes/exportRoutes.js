@@ -65,6 +65,89 @@ function csvEscape(value) {
   return str;
 }
 
+// CSV export — Fleet Income breakdown for a date range (mirrors the Dashboard panel)
+router.get('/fleet-income-csv', async (req, res) => {
+  const { from, to } = req.query;
+
+  const rangeStart = from ? dayjs(from).startOf('day').toDate() : undefined;
+  const rangeEnd = to ? dayjs(to).endOf('day').toDate() : undefined;
+
+  const settlementWhere = {};
+  if (rangeStart || rangeEnd) {
+    settlementWhere.weekStart = {};
+    if (rangeStart) settlementWhere.weekStart.gte = rangeStart;
+    if (rangeEnd) settlementWhere.weekStart.lte = rangeEnd;
+  }
+  const dateWhere = {};
+  if (rangeStart || rangeEnd) {
+    dateWhere.date = {};
+    if (rangeStart) dateWhere.date.gte = rangeStart;
+    if (rangeEnd) dateWhere.date.lte = rangeEnd;
+  }
+
+  const [settlements, expenses, customPayments] = await Promise.all([
+    prisma.weeklySettlement.findMany({ where: settlementWhere, include: { car: true }, orderBy: { weekStart: 'desc' } }),
+    prisma.expense.findMany({ where: dateWhere, orderBy: { date: 'desc' } }),
+    prisma.customPayment.findMany({ where: dateWhere, orderBy: { date: 'desc' } }),
+  ]);
+
+  let fleetChargeTotal = 0;
+  let managerFeeTotal = 0;
+  settlements.forEach((s) => {
+    fleetChargeTotal += s.fleetCharge;
+    if (s.car && s.car.ownerId) managerFeeTotal += s.car.managerFee;
+  });
+  const fleetNetFromCars = fleetChargeTotal - managerFeeTotal;
+  const expensesTotal = expenses.reduce((sum, e) => sum + e.amount, 0);
+  const customPaymentsTotal = customPayments.reduce((sum, p) => sum + p.amount, 0);
+  const finalNetIncome = fleetNetFromCars + customPaymentsTotal - expensesTotal;
+
+  const lines = [];
+  const row = (...cells) => lines.push(cells.map(csvEscape).join(','));
+
+  row('Fleet Income Report');
+  row('From', from || '(all)');
+  row('To', to || '(all)');
+  row();
+
+  row('Summary');
+  row('Item', 'Amount');
+  row('Fleet Charge Collected', fleetChargeTotal.toFixed(2));
+  row('Manager Fees Paid Out', (-managerFeeTotal).toFixed(2));
+  row('Fleet Net (before expenses)', fleetNetFromCars.toFixed(2));
+  row('Custom Payments', customPaymentsTotal.toFixed(2));
+  row('Expenses', (-expensesTotal).toFixed(2));
+  row('Final Fleet Net Income', finalNetIncome.toFixed(2));
+  row();
+
+  row('Per-Car Charge Breakdown');
+  row('Car Plate', 'Fleet Charge', 'Manager Fee', 'Fleet Net');
+  settlements.forEach((s) => {
+    const fee = s.car && s.car.ownerId ? s.car.managerFee : 0;
+    row(s.car ? s.car.plate : '(no car)', s.fleetCharge.toFixed(2), fee.toFixed(2), (s.fleetCharge - fee).toFixed(2));
+  });
+  row();
+
+  row('Custom Payments');
+  row('Date', 'Name', 'Notes', 'Amount');
+  customPayments.forEach((p) => {
+    row(dayjs(p.date).format('YYYY-MM-DD'), p.name, p.notes || '', p.amount.toFixed(2));
+  });
+  row();
+
+  row('Expenses');
+  row('Date', 'Name', 'Notes', 'Amount');
+  expenses.forEach((e) => {
+    row(dayjs(e.date).format('YYYY-MM-DD'), e.name, e.notes || '', e.amount.toFixed(2));
+  });
+
+  const csv = lines.join('\n');
+
+  res.setHeader('Content-Type', 'text/csv');
+  res.setHeader('Content-Disposition', `attachment; filename="fleet_income_${from || 'all'}_${to || 'all'}.csv"`);
+  res.send(csv);
+});
+
 // PDF payslip for a single settlement
 router.get('/pdf/:settlementId', async (req, res) => {
   const settlement = await prisma.weeklySettlement.findUnique({

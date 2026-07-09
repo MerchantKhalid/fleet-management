@@ -49,6 +49,7 @@ model Car {
   fuelType         String    // DIESEL | ELECTRIC | HYBRID | PETROL
   status           String    @default("ACTIVE") // ACTIVE | MAINTENANCE | RETIRED
   weeklyRentalCost Float     @default(0)
+  managerFee       Float     @default(5) // portion of the weekly fleet charge paid out to the car's manager/owner
   ownerId          String?
   owner            CarOwner? @relation(fields: [ownerId], references: [id])
   currentDriverId  String?   @unique
@@ -144,4 +145,22 @@ model AccidentHistory {
   opponentCarPlate     String?   // other party's car plate, if available
   notes                String?
   createdAt            DateTime  @default(now())
+}
+
+model Expense {
+  id        String   @id @default(cuid())
+  name      String
+  amount    Float
+  date      DateTime @default(now())
+  notes     String?
+  createdAt DateTime @default(now())
+}
+
+model CustomPayment {
+  id        String   @id @default(cuid())
+  name      String
+  amount    Float
+  date      DateTime @default(now())
+  notes     String?
+  createdAt DateTime @default(now())
 }

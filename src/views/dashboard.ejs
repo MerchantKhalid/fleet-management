@@ -6,7 +6,51 @@
 <div class="kpi-grid">
   <div class="kpi"><div class="label">Active Drivers</div><div class="value"><%= activeDrivers %></div></div>
   <div class="kpi"><div class="label">Active Cars</div><div class="value"><%= activeCars %></div></div>
-  <div class="kpi"><div class="label">Last 10 Settlements Total</div><div class="value">€<%= weekTotal.toFixed(2) %></div></div>
+</div>
+
+<div class="panel">
+  <div class="panel-head"><h3>Fleet Income</h3></div>
+  <form method="GET" action="/" class="form-grid" style="padding:14px 16px 0;">
+    <div class="field"><label>From</label><input type="date" name="from" value="<%= from %>"></div>
+    <div class="field"><label>To</label><input type="date" name="to" value="<%= to %>"></div>
+    <div class="field" style="align-self:flex-end;">
+      <button class="btn" type="submit">Filter</button>
+      <a class="btn secondary" href="/">This Week</a>
+      <a class="btn secondary" href="/export/fleet-income-csv?from=<%= from %>&to=<%= to %>">Download CSV</a>
+    </div>
+  </form>
+
+  <table>
+    <tr><th>Item</th><th>Amount</th></tr>
+    <tr>
+      <td>Fleet Charge Collected (<%= settlementCount %> settlement<%= settlementCount === 1 ? '' : 's' %>)</td>
+      <td>€<%= fleetChargeTotal.toFixed(2) %></td>
+    </tr>
+    <tr>
+      <td>Manager Fees Paid Out</td>
+      <td>-€<%= managerFeeTotal.toFixed(2) %></td>
+    </tr>
+    <tr>
+      <td><b>Fleet Net (before expenses)</b></td>
+      <td><b>€<%= fleetNetFromCars.toFixed(2) %></b></td>
+    </tr>
+    <tr>
+      <td>Custom Payments in period (<a href="/custom-payments">manage</a>)</td>
+      <td>+€<%= customPaymentsTotal.toFixed(2) %></td>
+    </tr>
+    <tr>
+      <td>Expenses in period (<a href="/expenses">manage</a>)</td>
+      <td>-€<%= expensesTotal.toFixed(2) %></td>
+    </tr>
+    <tr style="border-top:2px solid var(--border, #ccc);">
+      <td><b>Final Fleet Net Income</b></td>
+      <td><b style="font-size:1.2em;">€<%= finalNetIncome.toFixed(2) %></b></td>
+    </tr>
+  </table>
+  <p style="padding:0 16px 14px; color:var(--muted); font-size:12.5px;">
+    Fleet charges €25/week per car; €5 goes to the car's manager where one is assigned, leaving the fleet €20/car.
+    The 6% IVA withheld from driver earnings is tracked separately and returned to drivers who issue a green receipt — see IVA Refunds.
+  </p>
 </div>
 
 <div class="panel">
@@ -19,21 +63,6 @@
       <div class="alert"><%= a %></div>
     <% }) %>
   </div>
-</div>
-
-<div class="panel">
-  <div class="panel-head"><h3>Recent Settlements</h3></div>
-  <table>
-    <tr><th>Driver</th><th>Week</th><th>Net Paid</th><th>Status</th></tr>
-    <% recentSettlements.forEach(s => { %>
-      <tr>
-        <td><%= s.driver.name %></td>
-        <td><%= s.weekStart.toISOString().slice(0,10) %></td>
-        <td>€<%= s.netPaid.toFixed(2) %></td>
-        <td><span class="badge <%= s.status === 'PAID' ? 'ok' : 'warn' %>"><%= s.status %></span></td>
-      </tr>
-    <% }) %>
-  </table>
 </div>
 
 <%- include('partials/foot') %>

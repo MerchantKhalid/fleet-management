@@ -14,7 +14,7 @@ router.get('/', async (req, res) => {
 
 // CREATE
 router.post('/', async (req, res) => {
-  const { plate, make, model, fuelType, weeklyRentalCost, ownerId } = req.body;
+  const { plate, make, model, fuelType, weeklyRentalCost, managerFee, ownerId } = req.body;
   try {
     await prisma.car.create({
       data: {
@@ -23,6 +23,7 @@ router.post('/', async (req, res) => {
         model,
         fuelType,
         weeklyRentalCost: Number(weeklyRentalCost || 0),
+        managerFee: Number(managerFee !== undefined && managerFee !== '' ? managerFee : 5),
         ownerId: ownerId || null,
       },
     });
@@ -49,7 +50,7 @@ router.get('/:id/edit', async (req, res) => {
 
 // UPDATE
 router.put('/:id', async (req, res) => {
-  const { plate, make, model, fuelType, weeklyRentalCost, status, ownerId } = req.body;
+  const { plate, make, model, fuelType, weeklyRentalCost, managerFee, status, ownerId } = req.body;
   await prisma.car.update({
     where: { id: req.params.id },
     data: {
@@ -58,6 +59,7 @@ router.put('/:id', async (req, res) => {
       model,
       fuelType,
       weeklyRentalCost: Number(weeklyRentalCost || 0),
+      managerFee: Number(managerFee !== undefined && managerFee !== '' ? managerFee : 5),
       status,
       ownerId: ownerId || null,
     },

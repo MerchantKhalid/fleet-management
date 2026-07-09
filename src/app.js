@@ -21,6 +21,8 @@ app.use('/iva-refunds', require('./routes/ivaRefunds'));
 app.use('/insurance', require('./routes/insurance'));
 app.use('/maintenance', require('./routes/maintenance'));
 app.use('/accidents', require('./routes/accidents'));
+app.use('/expenses', require('./routes/expenses'));
+app.use('/custom-payments', require('./routes/customPayments'));
 app.use('/export', require('./routes/exportRoutes'));
 
 const PORT = process.env.PORT || 3000;

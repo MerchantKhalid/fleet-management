@@ -1,0 +1,53 @@
+<%- include('../partials/head') %>
+
+<h1>Expenses</h1>
+<div class="meta">Company running costs — office, tools, admin, anything outside per-car settlements</div>
+
+<div class="panel">
+  <div class="panel-head"><h3>Add Expense</h3></div>
+  <form method="POST" action="/expenses">
+    <div class="form-grid">
+      <div class="field"><label>Expense Name</label><input name="name" required></div>
+      <div class="field"><label>Amount</label><input type="number" step="0.01" name="amount" required></div>
+      <div class="field"><label>Date</label><input type="date" name="date"></div>
+      <div class="field"><label>Notes</label><input name="notes"></div>
+    </div>
+    <div class="form-actions"><button class="btn" type="submit">Save Expense</button></div>
+  </form>
+</div>
+
+<div class="panel">
+  <div class="panel-head"><h3>Expense History</h3></div>
+  <form method="GET" action="/expenses" class="form-grid" style="padding:14px 16px 0;">
+    <div class="field"><label>From</label><input type="date" name="from" value="<%= from %>"></div>
+    <div class="field"><label>To</label><input type="date" name="to" value="<%= to %>"></div>
+    <div class="field" style="align-self:flex-end;">
+      <button class="btn" type="submit">Filter</button>
+      <% if (from || to) { %> <a class="btn secondary" href="/expenses">Clear</a> <% } %>
+    </div>
+  </form>
+  <table>
+    <tr><th>Date</th><th>Name</th><th>Notes</th><th>Amount</th><th></th></tr>
+    <% if (expenses.length === 0) { %>
+      <tr><td colspan="5" style="color:var(--muted);">No expenses recorded<% if (from || to) { %> for this range<% } %>.</td></tr>
+    <% } %>
+    <% expenses.forEach(e => { %>
+      <tr>
+        <td><%= e.date.toISOString().slice(0,10) %></td>
+        <td><%= e.name %></td>
+        <td><%= e.notes || '-' %></td>
+        <td>€<%= e.amount.toFixed(2) %></td>
+        <td>
+          <form class="inline-form" method="POST" action="/expenses/<%= e.id %>?_method=DELETE" onsubmit="return confirm('Delete this expense?');">
+            <button class="btn danger" type="submit">Delete</button>
+          </form>
+        </td>
+      </tr>
+    <% }) %>
+    <% if (expenses.length > 0) { %>
+      <tr><td colspan="3"><b>Total</b></td><td><b>€<%= total.toFixed(2) %></b></td><td></td></tr>
+    <% } %>
+  </table>
+</div>
+
+<%- include('../partials/foot') %>

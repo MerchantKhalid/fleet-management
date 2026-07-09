@@ -5,15 +5,25 @@ const { createSettlement } = require('../services/settlementService');
 
 // LIST + ADD FORM
 router.get('/', async (req, res) => {
+  const { from, to } = req.query;
+
+  const where = {};
+  if (from || to) {
+    where.weekStart = {};
+    if (from) where.weekStart.gte = new Date(from);
+    if (to) where.weekStart.lte = new Date(to);
+  }
+
   const [settlements, drivers] = await Promise.all([
     prisma.weeklySettlement.findMany({
+      where,
       include: { driver: true, car: true },
       orderBy: { weekStart: 'desc' },
-      take: 50,
+      take: from || to ? undefined : 50,
     }),
     prisma.driver.findMany({ where: { status: 'ACTIVE' }, include: { currentCar: true } }),
   ]);
-  res.render('settlements/index', { settlements, drivers });
+  res.render('settlements/index', { settlements, drivers, from: from || '', to: to || '' });
 });
 
 // CREATE (calculates + saves + creates linked IVA refund)
