@@ -23,11 +23,11 @@
   <table>
     <tr><th>Item</th><th>Amount</th></tr>
     <tr>
-      <td>Fleet Charge Collected (<%= settlementCount %> settlement<%= settlementCount === 1 ? '' : 's' %>)</td>
+      <td>Fleet Charge Collected (<%= activeCars %> active car<%= activeCars === 1 ? '' : 's' %> × €25)</td>
       <td>€<%= fleetChargeTotal.toFixed(2) %></td>
     </tr>
     <tr>
-      <td>Manager Fees Paid Out</td>
+      <td>Manager Fees Paid Out (<%= activeCars %> active car<%= activeCars === 1 ? '' : 's' %> × €5)</td>
       <td>-€<%= managerFeeTotal.toFixed(2) %></td>
     </tr>
     <tr>
@@ -48,7 +48,8 @@
     </tr>
   </table>
   <p style="padding:0 16px 14px; color:var(--muted); font-size:12.5px;">
-    Fleet charges €25/week per car; €5 goes to the car's manager where one is assigned, leaving the fleet €20/car.
+    Fleet charges €25/week per active car; €5/car is paid out as a manager fee, leaving the fleet €20/car.
+    These totals are based on the current active car count, not on settlements entered for the period.
     The 6% IVA withheld from driver earnings is tracked separately and returned to drivers who issue a green receipt — see IVA Refunds.
   </p>
 </div>

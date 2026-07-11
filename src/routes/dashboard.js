@@ -19,13 +19,6 @@ router.get('/', async (req, res) => {
   const rangeStart = from ? dayjs(from).startOf('day').toDate() : undefined;
   const rangeEnd = to ? dayjs(to).endOf('day').toDate() : undefined;
 
-  const settlementWhere = {};
-  if (rangeStart || rangeEnd) {
-    settlementWhere.weekStart = {};
-    if (rangeStart) settlementWhere.weekStart.gte = rangeStart;
-    if (rangeEnd) settlementWhere.weekStart.lte = rangeEnd;
-  }
-
   const expenseWhere = {};
   if (rangeStart || rangeEnd) {
     expenseWhere.date = {};
@@ -33,24 +26,21 @@ router.get('/', async (req, res) => {
     if (rangeEnd) expenseWhere.date.lte = rangeEnd;
   }
 
-  const [activeDrivers, activeCars, settlementsInRange, expensesInRange, customPaymentsInRange] = await Promise.all([
+  const [activeDrivers, activeCars, expensesInRange, customPaymentsInRange] = await Promise.all([
     prisma.driver.count({ where: { status: 'ACTIVE' } }),
     prisma.car.count({ where: { status: 'ACTIVE' } }),
-    prisma.weeklySettlement.findMany({ where: settlementWhere, include: { car: true } }),
     prisma.expense.findMany({ where: expenseWhere }),
     prisma.customPayment.findMany({ where: expenseWhere }),
   ]);
 
-  // Fleet charges €25/week per car; €5 of that goes to the car's manager/owner (if it has one);
-  // the fleet keeps the rest (typically €20).
-  let fleetChargeTotal = 0;
-  let managerFeeTotal = 0;
-  settlementsInRange.forEach((s) => {
-    fleetChargeTotal += s.fleetCharge;
-    if (s.car && s.car.ownerId) {
-      managerFeeTotal += s.car.managerFee;
-    }
-  });
+  // Fleet charges €25/week per active car; €5 of that goes out as a manager fee per active car;
+  // the fleet keeps the rest (typically €20). This is based on the current active car count
+  // (not on settlements actually entered), so it shows expected weekly totals even when 0
+  // settlements have been logged yet.
+  const FLEET_CHARGE_PER_CAR = 25;
+  const MANAGER_FEE_PER_CAR = 5;
+  const fleetChargeTotal = activeCars * FLEET_CHARGE_PER_CAR;
+  const managerFeeTotal = activeCars * MANAGER_FEE_PER_CAR;
   const fleetNetFromCars = fleetChargeTotal - managerFeeTotal;
   const expensesTotal = expensesInRange.reduce((sum, e) => sum + e.amount, 0);
   const customPaymentsTotal = customPaymentsInRange.reduce((sum, p) => sum + p.amount, 0);
@@ -80,7 +70,6 @@ router.get('/', async (req, res) => {
     expensesTotal,
     customPaymentsTotal,
     finalNetIncome,
-    settlementCount: settlementsInRange.length,
   });
 });
 
