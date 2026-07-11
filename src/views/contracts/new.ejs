@@ -1,0 +1,293 @@
+<%- include('../partials/head') %>
+
+<h1>Gerar Contrato</h1>
+<div class="meta">Preenche os dados do motorista uma vez — o contrato TVDE abaixo atualiza-se automaticamente. Descarrega em PDF quando estiver pronto.</div>
+
+<div class="contract-wrap">
+  <div class="contract-form panel">
+    <div class="panel-head"><h3>Dados do contrato</h3></div>
+    <div style="padding:14px 16px;">
+
+      <% if (drivers.length) { %>
+        <label class="c-label">Carregar dados de um motorista existente (opcional)</label>
+        <select id="driverPicker" class="c-input">
+          <option value="">— seleciona um motorista —</option>
+          <% drivers.forEach(d => { %>
+            <option
+              value="<%= d.id %>"
+              data-name="<%= d.name %>"
+              data-plate="<%= d.currentCar ? d.currentCar.plate : '' %>"
+              data-make="<%= d.currentCar ? d.currentCar.make : '' %>"
+            ><%= d.name %><%= d.currentCar ? ' — ' + d.currentCar.plate : '' %></option>
+          <% }) %>
+        </select>
+        <p style="color:var(--muted); font-size:11.5px; margin:6px 0 16px;">
+          Isto preenche o nome e a matrícula/marca do veículo com os dados já guardados. Campos como
+          nacionalidade, NIF, título de residência e carta de condução ainda não são guardados no sistema,
+          por isso continuam a ser escritos à mão em cada contrato.
+        </p>
+      <% } %>
+
+      <fieldset>
+        <legend>Empresa (fixo — só mudar se necessário)</legend>
+        <label class="c-label">Nome da empresa</label>
+        <input class="c-input" data-f="company_name" value="Bdcars LDA">
+        <label class="c-label">Morada</label>
+        <input class="c-input" data-f="company_address" value="Rua Alves Redol N-1, 3esq, 2620-127 Odivelas">
+        <label class="c-label">NIF / número único de matrícula</label>
+        <input class="c-input" data-f="company_nif" value="519320794">
+        <label class="c-label">Capital social (€)</label>
+        <input class="c-input" data-f="company_capital" value="50.000,00">
+        <div class="c-row2">
+          <div>
+            <label class="c-label">Nº licença de Operador</label>
+            <input class="c-input" data-f="license_operador" value="178063/2024">
+          </div>
+          <div>
+            <label class="c-label">Válida até</label>
+            <input class="c-input" data-f="license_operador_validade" value="30/01/2034">
+          </div>
+        </div>
+        <div class="c-row2">
+          <div>
+            <label class="c-label">Nº licença Descaracterizado</label>
+            <input class="c-input" data-f="license_descaracterizado" value="132668/2023">
+          </div>
+          <div>
+            <label class="c-label">Válida até</label>
+            <input class="c-input" data-f="license_descaracterizado_validade" value="07/03/2033">
+          </div>
+        </div>
+        <label class="c-label">Nº da apólice de responsabilidade civil</label>
+        <input class="c-input" data-f="policy_number" value="013-005-000/101503">
+      </fieldset>
+
+      <fieldset>
+        <legend>Motorista (Prestador) — muda a cada contrato</legend>
+        <label class="c-label">Nome completo</label>
+        <input class="c-input" data-f="driver_name" placeholder="Nome do motorista">
+        <label class="c-label">Nacionalidade</label>
+        <input class="c-input" data-f="driver_nationality" placeholder="ex: Bangladeshi">
+        <label class="c-label">Nº de contribuinte fiscal</label>
+        <input class="c-input" data-f="driver_nif" placeholder="ex: 302759867">
+        <div class="c-row2">
+          <div>
+            <label class="c-label">Nº título de residência</label>
+            <input class="c-input" data-f="driver_residence_number" placeholder="ex: 8SS326213">
+          </div>
+          <div>
+            <label class="c-label">Válido até</label>
+            <input class="c-input" data-f="driver_residence_validade" placeholder="dd/mm/aaaa">
+          </div>
+        </div>
+        <label class="c-label">Morada de residência</label>
+        <input class="c-input" data-f="driver_address" placeholder="Rua, nº, andar, código postal, cidade">
+        <label class="c-label">Nº carta de condução</label>
+        <input class="c-input" data-f="driver_license_number" placeholder="ex: 191892075">
+        <div class="c-row2">
+          <div>
+            <label class="c-label">Emitida pelo IMT de</label>
+            <input class="c-input" data-f="driver_license_place" placeholder="ex: Lisboa">
+          </div>
+          <div>
+            <label class="c-label">Data de emissão</label>
+            <input class="c-input" data-f="driver_license_issue_date" placeholder="dd/mm/aaaa">
+          </div>
+        </div>
+        <label class="c-label">Carta válida até</label>
+        <input class="c-input" data-f="driver_license_validade" placeholder="dd/mm/aaaa">
+      </fieldset>
+
+      <fieldset>
+        <legend>Veículo</legend>
+        <label class="c-label">Matrícula</label>
+        <input class="c-input" data-f="vehicle_plate" placeholder="ex: AT-36-DC">
+        <label class="c-label">Marca</label>
+        <input class="c-input" data-f="vehicle_brand" placeholder="ex: Renault">
+        <label class="c-label">Nº do quadro (chassis)</label>
+        <input class="c-input" data-f="vehicle_chassis" placeholder="ex: VF17RBJ0D59604993">
+      </fieldset>
+
+      <fieldset>
+        <legend>Contrato</legend>
+        <div class="c-row2">
+          <div>
+            <label class="c-label">Início de vigência</label>
+            <input class="c-input" data-f="contract_start_date" placeholder="dd/mm/aaaa">
+          </div>
+          <div>
+            <label class="c-label">Términus</label>
+            <input class="c-input" data-f="contract_end_date" placeholder="dd/mm/aaaa">
+          </div>
+        </div>
+        <label class="c-label">% da faturação líquida para o Prestador</label>
+        <input class="c-input" data-f="retribution_percentage" value="45">
+        <label class="c-label">Data de assinatura</label>
+        <input class="c-input" data-f="signing_date" placeholder="ex: 11 de julho de 2026">
+      </fieldset>
+
+      <div class="c-actions">
+        <button class="btn" onclick="window.print()" type="button">Descarregar PDF</button>
+        <button class="btn secondary" onclick="resetContractForm()" type="button">Limpar dados do motorista</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="contract-preview">
+    <div class="c-page" id="contractPage">
+      <h2 class="c-title">CONTRATO DE PRESTAÇÃO DE SERVIÇOS TVDE</h2>
+
+      <p>Entre:</p>
+      <p><b>PRIMEIRA:</b> <span class="c-fill" data-out="company_name"></span>, com sede na <span class="c-fill" data-out="company_address"></span>, com o número único de matrícula e identificação fiscal <span class="c-fill" data-out="company_nif"></span>, com o capital social de € <span class="c-fill" data-out="company_capital"></span>, portadora da Licença de Operador de Transporte em Veículo Descaracterizado número <span class="c-fill" data-out="license_operador"></span>, válida até <span class="c-fill" data-out="license_operador_validade"></span> emitida pelo IMT – Instituto da Mobilidade e dos Transportes, I.P.,</p>
+      <p>E,</p>
+      <p><b>SEGUNDO:</b> <span class="c-fill" data-out="driver_name"></span>, maior, com nacionalidade <span class="c-fill" data-out="driver_nationality"></span>, contribuinte fiscal número <span class="c-fill" data-out="driver_nif"></span>, portador do título de residência número <span class="c-fill" data-out="driver_residence_number"></span>, válido até <span class="c-fill" data-out="driver_residence_validade"></span>, Residente na <span class="c-fill" data-out="driver_address"></span>, portador da carta de condução número <span class="c-fill" data-out="driver_license_number"></span>, emitida pelo IMT de <span class="c-fill" data-out="driver_license_place"></span>, a <span class="c-fill" data-out="driver_license_issue_date"></span>, e válida até <span class="c-fill" data-out="driver_license_validade"></span>, Numero do Veiculo, ora em diante designado por PRESTADOR ou SEGUNDO CONTRAENTE.</p>
+
+      <p>É NESTA DATA CELEBRADO DE BOA FÉ E REDIGIDO A ESCRITO O PRESENTE CONTRATO DE PRESTAÇÃO DE SERVIÇOS, NOS TERMOS DO ARTIGO 1154º DO CÓDIGO CIVIL, E DOS N.ºS 4 E SEGUINTES DO ARTIGO 12º-A DO CÓDIGO DO TRABALHO, NA SUA ATUAL REDAÇÃO O QUAL SE REGERÁ PELAS CLÁUSULAS SEGUINTES:</p>
+
+      <h3 class="c-clause">CLÁUSULA 1.ª</h3>
+      <h4 class="c-clause-name">(Objeto)</h4>
+      <p>O presente Contrato de Prestação de Serviços visa regular as responsabilidades do PRESTADOR e da EMPRESA, decorrentes da utilização do veículo automóvel com a matrícula <span class="c-fill" data-out="vehicle_plate"></span>, da marca <span class="c-fill" data-out="vehicle_brand"></span>, com o quadro <span class="c-fill" data-out="vehicle_chassis"></span>, ao exercício da atividade comercial, com o fim a que se destina.</p>
+
+      <h3 class="c-clause">CLÁUSULA 2.ª</h3>
+      <h4 class="c-clause-name">(Atividade e Seguro de Responsabilidade Civil)</h4>
+      <ul>
+        <li>A EMPRESA exerce a atividade de operador de TVDE em território português de transporte individual remunerado de passageiros de acordo com a Licença de Operador de Transporte em Veículo Descaracterizado número <span class="c-fill" data-out="license_descaracterizado"></span>, válida até <span class="c-fill" data-out="license_descaracterizado_validade"></span> emitida pelo IMT – Instituto da Mobilidade e dos Transportes, I.P.</li>
+        <li>A EMPRESA detém a apólice número <span class="c-fill" data-out="policy_number"></span> de responsabilidade civil.</li>
+      </ul>
+
+      <h3 class="c-clause">CLÁUSULA 3.ª</h3>
+      <h4 class="c-clause-name">(Funções)</h4>
+      <ul>
+        <li>O PRESTADOR no regime de prestação de serviços, objeto do presente contrato, exercerá funções de motorista de TVDE de transporte individual de passageiros em veículos descaracterizados a partir de plataforma eletrónica, devendo agir sempre com a prudente e diligente condução dos referidos veículos descaracterizados para a EMPRESA, na qualidade de Operador de Transporte em Veículo Descaracterizado.</li>
+        <li>A prestação de um serviço de TVDE inicia-se com a aceitação do PRESTADOR de um pedido de transporte entre dois pontos submetidos por um ou mais utilizadores numa plataforma eletrónica e termina com o abandono pelo utilizador desse veículo, depois de realizado o transporte para o destino selecionado, ou por qualquer outra causa que implique a cessação de fruição do veículo pelo utilizador.</li>
+      </ul>
+
+      <h3 class="c-clause">CLÁUSULA 4.ª</h3>
+      <h4 class="c-clause-name">(Duração da atividade)</h4>
+      <p>O PRESTADOR não pode operar veículos de TVDE por mais de dez horas dentro de um período de 24 horas, independentemente do número de plataformas nas quais preste serviços, de acordo com o estipulado pela Lei nº 45/2018, na sua atual versão.</p>
+
+      <h3 class="c-clause">CLÁUSULA 5.ª</h3>
+      <h4 class="c-clause-name">(Controlo e limitação da atividade)</h4>
+      <p>A EMPRESA, na qualidade de operador da plataforma eletrónica está obrigada a assegurar o pleno e permanente cumprimento dos requisitos de exercício da atividade previstos no art. 14.º da Lei n.º 45/2018, de 10/08, na sua atual versão, em conjunto com a Portaria n.º 54-R/2023, de 28 de fevereiro, incluindo os respeitantes a veículos e operadores de serviço de TVDE.</p>
+
+      <h3 class="c-clause">CLÁUSULA 6.ª</h3>
+      <h4 class="c-clause-name">(Vigência e retribuição)</h4>
+      <ul>
+        <li>O presente contrato de prestação de serviços tem o seu início de vigência a <span class="c-fill" data-out="contract_start_date"></span> e términus a <span class="c-fill" data-out="contract_end_date"></span>, tacitamente renovável por períodos iguais e sucessivos, salvo havendo acordo prévio escrito noutro sentido, alcançado entre as Partes, o qual fará parte integrante do presente contrato.</li>
+        <li>A prestação do serviço de TVDE remunerada pela aplicação de uma ou mais tarifas à distância percorrida e ou ao tempo despendido no transporte, ou pela aplicação de um preço fixo determinado antes da contratação do serviço, o PRESTADOR recebe semanalmente o valor de <span class="c-fill" data-out="retribution_percentage"></span>% da faturação líquida da EMPRESA, recebendo a verba quinzenalmente, contra a entrega do respetivo recibo verde.</li>
+        <li>O presente contrato não confere ao PRESTADOR direito a quaisquer outras importâncias, seja a que título for, bem como não confere ao PRESTADOR a qualidade de trabalhador da EMPRESA, o que é expressamente reconhecido por ambas as partes, excluindo a presunção de tal relação laboral.</li>
+      </ul>
+
+      <h3 class="c-clause">CLÁUSULA 7.ª</h3>
+      <h4 class="c-clause-name">(Responsabilidades do Prestador)</h4>
+      <p>É imputada a responsabilidade, ao PRESTADOR, nos termos infra expostos:</p>
+      <ul>
+        <li>O PRESTADOR declara que, enquanto se encontrar na posse do veículo, seja ou não no exercício das suas funções, fará uma condução prudente, responsável e segura, cumprindo escrupulosamente todas as normas legais, nomeadamente o Código da Estrada;</li>
+        <li>É da sua única e exclusiva responsabilidade, o pagamento de qualquer quantia a título de coima ou outra, durante o exercício das suas funções;</li>
+        <li>Se, apesar do disposto no presente contrato, nomeadamente quanto a contraordenações ou uso imprudente do veículo, a EMPRESA for chamada a liquidar quaisquer valores ou a indemnizar terceiros por qualquer dano emergente da utilização do veículo, gozará de direito de regresso sobre o PRESTADOR por todas as quantias despendidas;</li>
+        <li>Obriga-se o PRESTADOR a não fazer do veículo uma utilização anormal, negligente ou imprudente, bem como a responsabilizar-se pelo pagamento de qualquer dano, inerente à utilização do veículo, que não possa ser imputado a um terceiro;</li>
+        <li>Antes e durante todo o período de utilização do veículo, fixado no presente contrato, é expressamente vedado ao PRESTADOR consumir bebidas alcoólicas ou substâncias estupefacientes, seja no interior ou exterior do veículo;</li>
+        <li>É expressamente vedado ao PRESTADOR e demais utilizadores do veículo comer, beber ou fumar no interior do mesmo, ficando o PRESTADOR responsável por não permitir que o façam;</li>
+        <li>Responsabiliza-se, por manter o veículo que lhe fora entregue pela EMPRESA, livre de qualquer tipo de lixos ou outros resíduos, comprometendo-se ainda, a atuar sempre de forma a preservar o bom estado de conservação do veículo;</li>
+        <li>O veículo será levantado pelo PRESTADOR, no início do seu turno, e devolvido por este à EMPRESA, no termo do turno, nas instalações desta ou em lugar que algum responsável da EMPRESA indique;</li>
+        <li>É expressamente vedado ao PRESTADOR, durante o período de utilização fixado pela empresa, permitir a condução do veículo por terceiros, sem prévio consentimento desta;</li>
+        <li>É expressamente vedado ao PRESTADOR transportar mais passageiros do que aqueles determinados no Documento Único Automóvel;</li>
+        <li>A incorporação de rádio, de telefone, de alarme, de equipamento de GPS e de equipamento de som, fica sujeita ao prévio consentimento da EMPRESA;</li>
+        <li>É estritamente vedado ao PRESTADOR a utilização do veículo entregue pela empresa para fins diversos da atividade contratada;</li>
+        <li>É obrigação do PRESTADOR avisar a EMPRESA, assim que tenha conhecimento, e no prazo máximo de 24 (vinte e quatro) horas a contar da sua deteção, de qualquer defeito, deterioração anormal avarias do veículo, assegurando a imobilização imediata do mesmo;</li>
+        <li>São da responsabilidade do PRESTADOR os defeitos, deterioração anormal ou avarias no veículo, quando resultem da ocultação, omissão ou falsas declarações deste;</li>
+        <li>Entende-se sempre que existe uso anormal, negligente ou imprudente da viatura quando seja feita uma utilização, designadamente a não imobilização imediata da viatura aquando da deteção de qualquer anomalia, assinalada ou não por sistema avisador, ou a utilização intensiva da viatura, designadamente através do uso frequente de sistemas do motor em esforço;</li>
+        <li>Deverá indemnizar a EMPRESA assim que a seguradora lhe tenha declarado a sua intenção de não indemnizar pelos danos sofridos, qualquer que seja a causa invocada pela seguradora, incluindo a alegação de que o PRESTADOR conduziria sobre o efeito de álcool ou de estupefacientes;</li>
+        <li>É ainda da responsabilidade do PRESTADOR o abastecimento semanal da viatura, ficando este por sua conta.</li>
+      </ul>
+
+      <h3 class="c-clause">CLÁUSULA 8.ª</h3>
+      <h4 class="c-clause-name">(Responsabilidade do proprietário do veículo)</h4>
+      <p>É imputada a responsabilidade, ao proprietário do veículo automóvel, nos termos infra expostos:</p>
+      <ul>
+        <li>É da responsabilidade do proprietário do veículo automóvel, o cumprimento das obrigações legais em relação ao veículo, nomeadamente a sujeição a Inspeção Periódica Obrigatória, Seguros, Impostos e demais encargos legais;</li>
+        <li>O proprietário do veículo automóvel é responsável pela manutenção técnica do veículo, nomeadamente de manutenção, preventiva ou corretiva, as reparações e qualquer que seja a intervenção em oficina, cuja responsabilidade não decorra de utilização imprudente do veículo por parte do prestador.</li>
+      </ul>
+
+      <h3 class="c-clause">CLÁUSULA 9.ª</h3>
+      <h4 class="c-clause-name">(Notificações e comunicações)</h4>
+      <ul>
+        <li>As notificações e comunicações relacionadas com o presente contrato de prestação de serviços ou com as obrigações nela assumidas, serão feitas mediante carta registada com aviso de receção para as moradas constantes do cabeçalho do presente contrato;</li>
+        <li>Cada uma das partes contraentes obriga-se a comunicar à outra parte, qualquer alteração aos elementos acima indicados, sem o que estes se manterão como válidos para as comunicações no âmbito do presente contrato de prestação de serviços.</li>
+      </ul>
+
+      <h3 class="c-clause">CLÁUSULA 10.ª</h3>
+      <h4 class="c-clause-name">(Rescisão)</h4>
+      <ul>
+        <li>O presente contrato pode cessar em qualquer momento, por mútuo acordo e reduzido a escrito.</li>
+        <li>A denúncia unilateral do presente contrato de prestação de serviços antes do termo do prazo da prestação de serviços, referida na cláusula 6.ª, por qualquer dos outorgantes, obriga a um aviso prévio de 15 (quinze) dias, salvo em casos de justa causa.</li>
+        <li>É designadamente justa causa de rescisão do contrato, a verificação por parte da EMPRESA de que o PRESTADOR não assegura ou deixou de assegurar, a competência profissional nas condições previstas no presente contrato de prestação de serviços de motorista de TVDE de transporte individual de passageiros em veículos descaracterizados a partir de plataforma eletrónica.</li>
+      </ul>
+
+      <h3 class="c-clause">CLÁUSULA 11.ª</h3>
+      <h4 class="c-clause-name">(Tribunal competente)</h4>
+      <ul>
+        <li>Para a resolução de qualquer litígio emergente do presente contrato de prestação de serviços, as Partes atribuem competência exclusiva ao foro da comarca do local de trabalho, com expressa renúncia a qualquer outro.</li>
+        <li>Em tudo o que estiver omisso no presente contrato, aplicam-se as normas constantes da legislação em vigor para a prestação do serviço em causa.</li>
+      </ul>
+
+      <p>Feito e assinado a <span class="c-fill" data-out="signing_date"></span>, em dois exemplares de igual conteúdo e valor, ficando um exemplar na posse de cada uma das partes contraentes.</p>
+
+      <div class="c-sign-block">
+        <div>
+          Pela EMPRESA,
+          <div class="c-sign-line"><span class="c-fill" data-out="company_name"></span> — NIF <span class="c-fill" data-out="company_nif"></span></div>
+        </div>
+        <div>
+          O PRESTADOR,
+          <div class="c-sign-line"><span class="c-fill" data-out="driver_name"></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const cInputs = document.querySelectorAll('[data-f]');
+  const cOuts = {};
+  document.querySelectorAll('#contractPage [data-out]').forEach(el => {
+    const key = el.dataset.out;
+    (cOuts[key] = cOuts[key] || []).push(el);
+  });
+
+  function renderContract(){
+    cInputs.forEach(inp => {
+      const key = inp.dataset.f;
+      const val = inp.value.trim();
+      (cOuts[key] || []).forEach(el => {
+        el.textContent = val || '[' + key + ']';
+        el.classList.toggle('c-empty', !val);
+      });
+    });
+  }
+  cInputs.forEach(inp => inp.addEventListener('input', renderContract));
+  renderContract();
+
+  function resetContractForm(){
+    document.querySelectorAll('.contract-form fieldset:nth-of-type(2) input, .contract-form fieldset:nth-of-type(3) input, .contract-form fieldset:nth-of-type(4) input').forEach(inp => {
+      inp.value = (inp.dataset.f === 'retribution_percentage') ? '45' : '';
+    });
+    const picker = document.getElementById('driverPicker');
+    if (picker) picker.value = '';
+    renderContract();
+  }
+
+  const picker = document.getElementById('driverPicker');
+  if (picker) {
+    picker.addEventListener('change', () => {
+      const opt = picker.selectedOptions[0];
+      if (!opt || !opt.value) return;
+      document.querySelector('[data-f="driver_name"]').value = opt.dataset.name || '';
+      document.querySelector('[data-f="vehicle_plate"]').value = opt.dataset.plate || '';
+      document.querySelector('[data-f="vehicle_brand"]').value = opt.dataset.make || '';
+      renderContract();
+    });
+  }
+</script>
+
+<%- include('../partials/foot') %>

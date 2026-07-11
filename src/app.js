@@ -24,6 +24,7 @@ app.use('/accidents', require('./routes/accidents'));
 app.use('/expenses', require('./routes/expenses'));
 app.use('/custom-payments', require('./routes/customPayments'));
 app.use('/export', require('./routes/exportRoutes'));
+app.use('/contracts', require('./routes/contracts'));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
