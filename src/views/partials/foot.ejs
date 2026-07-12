@@ -1,4 +1,34 @@
   </div>
 </div>
+<script>
+  (function () {
+    var menuBtn = document.getElementById('menuBtn');
+    var sidebar = document.getElementById('sidebar');
+    var overlay = document.getElementById('sidebarOverlay');
+    if (!menuBtn || !sidebar || !overlay) return;
+
+    function closeMenu() {
+      sidebar.classList.remove('open');
+      overlay.classList.remove('open');
+      menuBtn.setAttribute('aria-expanded', 'false');
+    }
+    function openMenu() {
+      sidebar.classList.add('open');
+      overlay.classList.add('open');
+      menuBtn.setAttribute('aria-expanded', 'true');
+    }
+
+    menuBtn.addEventListener('click', function () {
+      if (sidebar.classList.contains('open')) closeMenu(); else openMenu();
+    });
+    overlay.addEventListener('click', closeMenu);
+    sidebar.querySelectorAll('.nav-item').forEach(function (link) {
+      link.addEventListener('click', closeMenu);
+    });
+    window.addEventListener('resize', function () {
+      if (window.innerWidth > 768) closeMenu();
+    });
+  })();
+</script>
 </body>
 </html>

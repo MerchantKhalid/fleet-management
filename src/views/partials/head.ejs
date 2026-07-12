@@ -2,13 +2,21 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>TVDE Fleet Manager</title>
   <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
 <div class="app">
-  <div class="sidebar">
+  <div class="topbar">
+    <button class="menu-btn" id="menuBtn" aria-label="Open menu" aria-expanded="false" aria-controls="sidebar">
+      <span></span><span></span><span></span>
+    </button>
     <div class="brand"><span class="dot"></span>BDCars Fleet</div>
+  </div>
+  <div class="overlay" id="sidebarOverlay"></div>
+  <div class="sidebar" id="sidebar">
+    <div class="brand sidebar-brand"><span class="dot"></span>BDCars Fleet</div>
     <a class="nav-item" href="/">Dashboard</a>
     <a class="nav-item" href="/drivers">Drivers</a>
     <a class="nav-item" href="/cars">Cars</a>
