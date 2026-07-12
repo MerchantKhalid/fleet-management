@@ -5,7 +5,10 @@
 
 <div class="kpi-grid">
   <div class="kpi"><div class="label">Active Drivers</div><div class="value"><%= activeDrivers %></div></div>
-  <div class="kpi"><div class="label">Active Cars</div><div class="value"><%= activeCars %></div></div>
+  <a class="kpi kpi-link" href="/cars">
+    <div class="label">Active Cars</div>
+    <div class="value"><%= activeCars %></div>
+  </a>
 </div>
 
 <div class="panel">
@@ -16,7 +19,7 @@
     <div class="field" style="align-self:flex-end;">
       <button class="btn" type="submit">Filter</button>
       <a class="btn secondary" href="/">This Week</a>
-      <a class="btn secondary" href="/export/fleet-income-csv?from=<%= from %>&to=<%= to %>">Download CSV</a>
+      <a class="btn secondary" href="/export/fleet-income-pdf?from=<%= from %>&to=<%= to %>">Download PDF</a>
     </div>
   </form>
 

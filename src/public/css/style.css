@@ -42,6 +42,43 @@ tr:last-child td{border-bottom:none;}
 .kpi .value{font-size:26px; font-weight:700; margin-top:4px;}
 a{color:var(--accent);}
 
+/* --- Settlement history table --- */
+.table-scroll{overflow-x:auto;}
+.settlement-table{min-width:900px;}
+.settlement-table th, .settlement-table td{white-space:nowrap;}
+.driver-link{color:var(--text); font-weight:600; text-decoration:none; border-bottom:1px solid transparent;}
+.driver-link:hover{color:var(--accent); border-bottom-color:var(--accent);}
+.week-cell{color:var(--muted); font-variant-numeric:tabular-nums;}
+.col-actions{text-align:right;}
+.row-actions{display:flex; justify-content:flex-end; align-items:center; gap:8px;}
+.btn-sm{padding:6px 10px; font-size:12px; white-space:nowrap;}
+.empty-row{text-align:center; color:var(--muted); padding:24px 16px !important;}
+
+/* --- Inline editable status dropdown (Cars list) --- */
+.status-select{border:1px solid var(--line); border-radius:20px; padding:4px 10px; font-size:11px; font-weight:600; cursor:pointer; appearance:none; -webkit-appearance:none; background-repeat:no-repeat; background-position:right 8px center; background-size:9px;}
+.status-select.status-active{background-color:#1c3327; color:var(--success);}
+.status-select.status-maintenance{background-color:#3a2f18; color:var(--warn);}
+.status-select.status-retired{background-color:#391f1c; color:var(--danger);}
+
+/* --- Dashboard KPI link --- */
+.kpi-link{display:block; text-decoration:none; color:inherit;}
+.kpi-link:hover{border-color:var(--accent);}
+.kpi-link:hover .value{color:var(--accent);}
+
+/* --- IVA Refunds table --- */
+.iva-table{min-width:980px; table-layout:fixed;}
+.iva-table th, .iva-table td{vertical-align:middle;}
+.iva-table td{white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.iva-table td.actions-cell{white-space:normal; overflow:visible; padding-top:8px; padding-bottom:8px;}
+.period-cell{color:var(--text); font-variant-numeric:tabular-nums;}
+.period-sep{color:var(--muted); padding:0 2px;}
+
+.refund-form{display:flex; align-items:center; gap:8px; justify-content:flex-end; flex-wrap:nowrap;}
+.refund-inputs{display:flex; gap:6px;}
+.refund-input{background:var(--surface-2); border:1px solid var(--line); border-radius:6px; color:var(--text); padding:6px 8px; font-size:12px; width:104px; height:30px;}
+.refund-form .btn{height:30px; display:flex; align-items:center; white-space:nowrap; flex-shrink:0;}
+.muted-dash{color:var(--muted); display:block; text-align:right;}
+
 /* --- Contract generator --- */
 .contract-wrap{display:grid; grid-template-columns:380px 1fr; gap:20px; align-items:start;}
 .contract-form{padding:0;}

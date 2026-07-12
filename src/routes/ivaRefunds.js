@@ -3,11 +3,21 @@ const router = express.Router();
 const prisma = require('../db');
 
 router.get('/', async (req, res) => {
+  const { from, to } = req.query;
+
+  const where = {};
+  if (from || to) {
+    where.periodStart = {};
+    if (from) where.periodStart.gte = new Date(from);
+    if (to) where.periodStart.lte = new Date(to);
+  }
+
   const refunds = await prisma.ivaRefund.findMany({
+    where,
     include: { driver: true },
-    orderBy: { period: 'desc' },
+    orderBy: { periodStart: 'desc' },
   });
-  res.render('ivaRefunds/index', { refunds });
+  res.render('ivaRefunds/index', { refunds, from: from || '', to: to || '' });
 });
 
 router.post('/:id/refund', async (req, res) => {

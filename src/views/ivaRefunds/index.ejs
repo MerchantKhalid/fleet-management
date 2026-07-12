@@ -4,34 +4,64 @@
 <div class="meta">6% withheld weekly, refunded once the driver issues the green receipt</div>
 
 <div class="panel">
-  <table>
-    <tr><th>Driver</th><th>Working Days (IVA Period)</th><th>Amount Withheld</th><th>Receipt Ref</th><th>Status</th><th>Refunded On</th><th></th></tr>
+  <div class="panel-head"><h3>All Refunds</h3></div>
+  <form method="GET" action="/iva-refunds" class="form-grid" style="padding:14px 16px 0;">
+    <div class="field"><label>From (period start)</label><input type="date" name="from" value="<%= from %>"></div>
+    <div class="field"><label>To (period start)</label><input type="date" name="to" value="<%= to %>"></div>
+    <div class="field" style="align-self:flex-end;">
+      <button class="btn" type="submit">Filter</button>
+      <% if (from || to) { %> <a class="btn secondary" href="/iva-refunds">Clear</a> <% } %>
+    </div>
+  </form>
+  <div class="table-scroll">
+  <table class="iva-table">
+    <colgroup>
+      <col style="width:12%">
+      <col style="width:17%">
+      <col style="width:9%">
+      <col style="width:9%">
+      <col style="width:8%">
+      <col style="width:13%">
+      <col style="width:32%">
+    </colgroup>
+    <tr>
+      <th>Driver</th><th>Working Days (IVA Period)</th><th>Amount Withheld</th>
+      <th>Receipt Ref</th><th>Status</th><th>Paid On</th><th class="col-actions">Actions</th>
+    </tr>
     <% refunds.forEach(r => { %>
       <tr>
-        <td><%= r.driver.name %></td>
-        <td>
+        <td><a class="driver-link" href="/drivers/<%= r.driver.id %>"><%= r.driver.name %></a></td>
+        <td class="period-cell">
           <% if (r.periodStart && r.periodEnd) { %>
-            <%= r.periodStart.toISOString().slice(0,10) %> to <%= r.periodEnd.toISOString().slice(0,10) %>
+            <%= r.periodStart.toISOString().slice(0,10) %> <span class="period-sep">→</span> <%= r.periodEnd.toISOString().slice(0,10) %>
           <% } else { %>
             <%= r.period %>
           <% } %>
         </td>
         <td>€<%= r.amount.toFixed(2) %></td>
         <td><%= r.receiptRef || '-' %></td>
-        <td><span class="badge <%= r.status === 'REFUNDED' ? 'ok' : 'warn' %>"><%= r.status %></span></td>
+        <td><span class="badge <%= r.status === 'REFUNDED' ? 'ok' : 'warn' %>"><%= r.status === 'REFUNDED' ? 'PAID' : 'PENDING' %></span></td>
         <td><%= r.refundedAt ? r.refundedAt.toISOString().slice(0,10) : '-' %></td>
-        <td>
+        <td class="actions-cell">
           <% if (r.status === 'WITHHELD') { %>
-            <form class="inline-form" method="POST" action="/iva-refunds/<%= r.id %>/refund">
-              <input type="date" name="refundDate" title="Date the fleet refunds the IVA" style="background:var(--surface-2); border:1px solid var(--line); border-radius:6px; color:var(--text); padding:5px 8px; font-size:12px;">
-              <input name="receiptRef" placeholder="Receipt reference" style="background:var(--surface-2); border:1px solid var(--line); border-radius:6px; color:var(--text); padding:5px 8px; font-size:12px;">
-              <button class="btn" type="submit">Mark Refunded</button>
+            <form class="refund-form" method="POST" action="/iva-refunds/<%= r.id %>/refund">
+              <div class="refund-inputs">
+                <input type="date" name="refundDate" title="Date the fleet refunds the IVA" class="refund-input" aria-label="Refund date">
+                <input name="receiptRef" placeholder="Receipt ref" class="refund-input" aria-label="Receipt reference">
+              </div>
+              <button class="btn btn-sm" type="submit">Mark Paid</button>
             </form>
+          <% } else { %>
+            <span class="muted-dash">—</span>
           <% } %>
         </td>
       </tr>
     <% }) %>
+    <% if (refunds.length === 0) { %>
+      <tr><td colspan="7" class="empty-row">No IVA refunds found for this range.</td></tr>
+    <% } %>
   </table>
+  </div>
 </div>
 
 <%- include('../partials/foot') %>

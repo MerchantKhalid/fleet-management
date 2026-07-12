@@ -44,12 +44,33 @@
       <% if (from || to) { %> <a class="btn secondary" href="/settlements">Clear</a> <% } %>
     </div>
   </form>
-  <table>
-    <tr><th>Driver</th><th>Week</th><th>Gross</th><th>Fleet Charge</th><th>IVA</th><th>Fuel/Elec</th><th>Via Verde</th><th>Net Paid</th><th>Status</th><th></th></tr>
-    <% settlements.forEach(s => { %>
+  <div class="table-scroll">
+  <table class="settlement-table">
+    <colgroup>
+      <col style="width:16%">
+      <col style="width:13%">
+      <col style="width:9%">
+      <col style="width:9%">
+      <col style="width:9%">
+      <col style="width:9%">
+      <col style="width:9%">
+      <col style="width:10%">
+      <col style="width:9%">
+      <col style="width:11%">
+    </colgroup>
+    <tr>
+      <th>Driver</th><th>Week</th><th>Gross</th><th>Fleet Charge</th><th>IVA</th>
+      <th>Fuel/Elec</th><th>Via Verde</th><th>Net Paid</th><th>Status</th><th class="col-actions">Actions</th>
+    </tr>
+    <% settlements.forEach(s => {
+        const fmt = d => new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+        const weekLabel = fmt(s.weekStart) + ' – ' + fmt(s.weekEnd);
+    %>
       <tr>
-        <td><%= s.driver.name %></td>
-        <td><%= s.weekStart.toISOString().slice(0,10) %></td>
+        <td>
+          <a class="driver-link" href="/drivers/<%= s.driver.id %>"><%= s.driver.name %></a>
+        </td>
+        <td class="week-cell"><%= weekLabel %></td>
         <td>€<%= (s.uberGross + s.boltGross).toFixed(2) %></td>
         <td>€<%= s.fleetCharge.toFixed(2) %></td>
         <td>€<%= s.ivaWithheld.toFixed(2) %></td>
@@ -58,16 +79,22 @@
         <td><b>€<%= s.netPaid.toFixed(2) %></b></td>
         <td><span class="badge <%= s.status === 'PAID' ? 'ok' : 'warn' %>"><%= s.status %></span></td>
         <td>
-          <% if (s.status === 'PENDING') { %>
-            <form class="inline-form" method="POST" action="/settlements/<%= s.id %>/pay">
-              <button class="btn" type="submit">Mark Paid</button>
-            </form>
-          <% } %>
-          <a class="btn secondary" href="/export/pdf/<%= s.id %>">PDF</a>
+          <div class="row-actions">
+            <% if (s.status === 'PENDING') { %>
+              <form class="inline-form" method="POST" action="/settlements/<%= s.id %>/pay">
+                <button class="btn btn-sm" type="submit">Mark Paid</button>
+              </form>
+            <% } %>
+            <a class="btn secondary btn-sm" href="/export/pdf/<%= s.id %>">PDF</a>
+          </div>
         </td>
       </tr>
     <% }) %>
+    <% if (settlements.length === 0) { %>
+      <tr><td colspan="10" class="empty-row">No settlements found for this range.</td></tr>
+    <% } %>
   </table>
+  </div>
 </div>
 
 <%- include('../partials/foot') %>
