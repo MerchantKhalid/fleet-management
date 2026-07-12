@@ -6,7 +6,8 @@ const IVA_RATE = 0.06;
 // Pure calculation — no DB access. Used both by the form preview and on save.
 function calculate({ uberGross, boltGross, fleetCharge, fuelElectricCost, viaVerde, otherDeductions }) {
   const gross = Number(uberGross || 0) + Number(boltGross || 0);
-  const ivaWithheld = round2(gross * IVA_RATE);
+  const ivaBase = round2(gross - Number(fuelElectricCost || 0));
+  const ivaWithheld = round2(ivaBase * IVA_RATE);
   const netPaid = round2(
     gross -
       Number(fleetCharge || 0) -
@@ -15,7 +16,7 @@ function calculate({ uberGross, boltGross, fleetCharge, fuelElectricCost, viaVer
       Number(viaVerde || 0) -
       Number(otherDeductions || 0)
   );
-  return { gross: round2(gross), ivaWithheld, netPaid };
+  return { gross: round2(gross), ivaBase, ivaWithheld, netPaid };
 }
 
 function round2(n) {
