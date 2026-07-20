@@ -181,7 +181,7 @@ a{color:var(--accent);}
 
 @media print{
   body{background:#fff;}
-  .sidebar, .contract-form, h1, .meta{display:none !important;}
+  .sidebar, .contract-form, h1, .meta, .topbar{display:none !important;}
   .app{display:block;}
   .main{padding:0; max-width:none;}
   .contract-wrap{display:block;}
