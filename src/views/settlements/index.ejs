@@ -42,6 +42,7 @@
     <div class="field" style="align-self:flex-end;">
       <button class="btn" type="submit">Filter</button>
       <% if (from || to) { %> <a class="btn secondary" href="/settlements">Clear</a> <% } %>
+      <a class="btn secondary" href="/export/all-payslips?from=<%= from %>&to=<%= to %>">Download All (PDF)</a>
     </div>
   </form>
   <div class="table-scroll">

@@ -362,6 +362,88 @@ router.get('/pdf-report', async (req, res) => {
   doc.end();
 });
 
+// PDF export — ALL drivers' earnings details together (combined payslips),
+// using the same from/to (weekStart) range filter as the Settlement History page
+router.get('/all-payslips', async (req, res) => {
+  const { from, to, driverId } = req.query;
+
+  const where = {};
+  if (from || to) {
+    where.weekStart = {};
+    if (from) where.weekStart.gte = new Date(from);
+    if (to) where.weekStart.lte = new Date(to);
+  }
+  if (driverId) where.driverId = driverId;
+
+  const settlements = await prisma.weeklySettlement.findMany({
+    where,
+    include: { driver: true, car: true },
+    orderBy: [{ driver: { name: 'asc' } }, { weekStart: 'asc' }],
+  });
+
+  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader('Content-Disposition', `attachment; filename="all_driver_payslips_${Date.now()}.pdf"`);
+
+  const doc = new PDFDocument({ margin: 36, size: 'A4' });
+  doc.pipe(res);
+
+  if (settlements.length === 0) {
+    doc.fontSize(14).text('No settlements found for this range.', { align: 'center' });
+    doc.end();
+    return;
+  }
+
+  doc.fontSize(16).font('Helvetica-Bold').text('All Driver Payslips', { align: 'center' });
+  doc.fontSize(9).font('Helvetica').fillColor('#555').text(
+    `${from ? 'From: ' + dayjs(from).format('DD MMM YYYY') + '  ' : ''}${to ? 'To: ' + dayjs(to).format('DD MMM YYYY') : ''}  |  Generated ${dayjs().format('DD MMM YYYY HH:mm')}`,
+    { align: 'center' }
+  );
+  doc.fillColor('#000');
+  doc.moveDown(0.5);
+
+  const left = doc.page.margins.left;
+  const right = doc.page.width - doc.page.margins.right;
+  const slipHeight = 92; // compact block height per driver, tuned to fit ~7 per A4 page
+  let y = doc.y;
+
+  settlements.forEach((settlement) => {
+    if (y + slipHeight > doc.page.height - doc.page.margins.bottom) {
+      doc.addPage();
+      y = doc.page.margins.top;
+    }
+
+    const gross = settlement.uberGross + settlement.boltGross;
+
+    doc.fontSize(11).font('Helvetica-Bold').fillColor('#000')
+      .text(
+        `${settlement.driver.name}  (${settlement.car ? settlement.car.plate : 'no car'})   —   Week: ${dayjs(settlement.weekStart).format('DD MMM')} - ${dayjs(settlement.weekEnd).format('DD MMM YYYY')}`,
+        left, y, { width: right - left }
+      );
+    y += 15;
+
+    doc.fontSize(9).font('Helvetica').fillColor('#333')
+      .text(`Uber: €${settlement.uberGross.toFixed(2)}    Bolt: €${settlement.boltGross.toFixed(2)}    Gross: €${gross.toFixed(2)}`, left, y);
+    y += 13;
+
+    doc.text(
+      `Fleet Chg: €${settlement.fleetCharge.toFixed(2)}    IVA: €${settlement.ivaWithheld.toFixed(2)}    Fuel/Elec: €${settlement.fuelElectricCost.toFixed(2)}    Via Verde: €${settlement.viaVerde.toFixed(2)}    Other: €${settlement.otherDeductions.toFixed(2)}`,
+      left, y
+    );
+    y += 15;
+
+    doc.fontSize(11).font('Helvetica-Bold').fillColor('#000')
+      .text(`Net Paid: €${settlement.netPaid.toFixed(2)}`, left, y, { continued: true })
+      .font('Helvetica').fontSize(9).fillColor('#555')
+      .text(`   (${settlement.status})`);
+    y += 16;
+
+    doc.moveTo(left, y).lineTo(right, y).strokeColor('#ddd').stroke();
+    y += 12;
+  });
+
+  doc.end();
+});
+
 // PDF payslip for a single settlement
 router.get('/pdf/:settlementId', async (req, res) => {
   const settlement = await prisma.weeklySettlement.findUnique({
