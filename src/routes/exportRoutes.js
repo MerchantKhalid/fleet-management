@@ -384,62 +384,137 @@ router.get('/all-payslips', async (req, res) => {
   res.setHeader('Content-Type', 'application/pdf');
   res.setHeader('Content-Disposition', `attachment; filename="all_driver_payslips_${Date.now()}.pdf"`);
 
-  const doc = new PDFDocument({ margin: 36, size: 'A4' });
+  const doc = new PDFDocument({ margin: 32, size: 'A4', layout: 'landscape' });
   doc.pipe(res);
 
   if (settlements.length === 0) {
-    doc.fontSize(14).text('No settlements found for this range.', { align: 'center' });
+    doc.fontSize(14).text('NO SETTLEMENTS FOUND FOR THIS RANGE.', { align: 'center' });
     doc.end();
     return;
   }
 
-  doc.fontSize(16).font('Helvetica-Bold').text('All Driver Payslips', { align: 'center' });
-  doc.fontSize(9).font('Helvetica').fillColor('#555').text(
-    `${from ? 'From: ' + dayjs(from).format('DD MMM YYYY') + '  ' : ''}${to ? 'To: ' + dayjs(to).format('DD MMM YYYY') : ''}  |  Generated ${dayjs().format('DD MMM YYYY HH:mm')}`,
+  // Header
+  doc.fontSize(17).font('Helvetica-Bold').fillColor('#000').text('ALL DRIVER PAYSLIPS', { align: 'center' });
+  doc.fontSize(9).font('Helvetica').fillColor('#666').text(
+    `${from ? 'FROM: ' + dayjs(from).format('DD MMM YYYY').toUpperCase() + '   ' : ''}${to ? 'TO: ' + dayjs(to).format('DD MMM YYYY').toUpperCase() : ''}   |   GENERATED ${dayjs().format('DD MMM YYYY HH:mm').toUpperCase()}   |   ${settlements.length} RECORD(S)`,
     { align: 'center' }
   );
+  doc.moveDown(0.8);
   doc.fillColor('#000');
-  doc.moveDown(0.5);
 
-  const left = doc.page.margins.left;
-  const right = doc.page.width - doc.page.margins.right;
-  const slipHeight = 92; // compact block height per driver, tuned to fit ~7 per A4 page
+  // Column layout
+  const cols = [
+    { key: '#', label: '#', width: 26, align: 'left' },
+    { key: 'driver', label: 'DRIVER', width: 100, align: 'left' },
+    { key: 'car', label: 'CAR', width: 55, align: 'left' },
+    { key: 'week', label: 'WEEK', width: 90, align: 'left' },
+    { key: 'uber', label: 'UBER', width: 55, align: 'right' },
+    { key: 'bolt', label: 'BOLT', width: 55, align: 'right' },
+    { key: 'gross', label: 'GROSS', width: 60, align: 'right' },
+    { key: 'fleet', label: 'FLEET CHG', width: 62, align: 'right' },
+    { key: 'iva', label: 'IVA', width: 50, align: 'right' },
+    { key: 'fuel', label: 'FUEL/ELEC', width: 60, align: 'right' },
+    { key: 'via', label: 'VIA VERDE', width: 58, align: 'right' },
+    { key: 'net', label: 'NET PAID', width: 65, align: 'right' },
+    { key: 'status', label: 'STATUS', width: 55, align: 'left' },
+  ];
+  const tableLeft = doc.page.margins.left;
+  const tableWidth = cols.reduce((a, c) => a + c.width, 0);
+  const rowHeight = 20;
+  const headerColor = '#2b3a55';
+  const stripeColor = '#f2f4f8';
+
+  function drawHeaderRow(y) {
+    doc.rect(tableLeft, y, tableWidth, rowHeight).fill(headerColor);
+    let x = tableLeft;
+    doc.fontSize(8).font('Helvetica-Bold').fillColor('#fff');
+    cols.forEach((c) => {
+      doc.text(c.label, x + 4, y + 6, { width: c.width - 6, align: c.align });
+      x += c.width;
+    });
+    doc.fillColor('#000');
+    return y + rowHeight;
+  }
+
   let y = doc.y;
+  y = drawHeaderRow(y);
 
-  settlements.forEach((settlement) => {
-    if (y + slipHeight > doc.page.height - doc.page.margins.bottom) {
+  let totalGross = 0;
+  let totalFleet = 0;
+  let totalIva = 0;
+  let totalFuel = 0;
+  let totalVia = 0;
+  let totalNet = 0;
+
+  settlements.forEach((s, i) => {
+    if (y + rowHeight > doc.page.height - doc.page.margins.bottom - 30) {
       doc.addPage();
       y = doc.page.margins.top;
+      y = drawHeaderRow(y);
     }
 
-    const gross = settlement.uberGross + settlement.boltGross;
+    const gross = s.uberGross + s.boltGross;
+    totalGross += gross;
+    totalFleet += s.fleetCharge;
+    totalIva += s.ivaWithheld;
+    totalFuel += s.fuelElectricCost;
+    totalVia += s.viaVerde;
+    totalNet += s.netPaid;
 
-    doc.fontSize(11).font('Helvetica-Bold').fillColor('#000')
-      .text(
-        `${settlement.driver.name}  (${settlement.car ? settlement.car.plate : 'no car'})   —   Week: ${dayjs(settlement.weekStart).format('DD MMM')} - ${dayjs(settlement.weekEnd).format('DD MMM YYYY')}`,
-        left, y, { width: right - left }
-      );
-    y += 15;
+    // Zebra stripe
+    if (i % 2 === 1) {
+      doc.rect(tableLeft, y, tableWidth, rowHeight).fill(stripeColor);
+      doc.fillColor('#000');
+    }
 
-    doc.fontSize(9).font('Helvetica').fillColor('#333')
-      .text(`Uber: €${settlement.uberGross.toFixed(2)}    Bolt: €${settlement.boltGross.toFixed(2)}    Gross: €${gross.toFixed(2)}`, left, y);
-    y += 13;
+    const rowVals = {
+      '#': String(i + 1),
+      driver: s.driver.name.toUpperCase(),
+      car: (s.car ? s.car.plate : '-').toUpperCase(),
+      week: `${dayjs(s.weekStart).format('DD MMM').toUpperCase()} - ${dayjs(s.weekEnd).format('DD MMM').toUpperCase()}`,
+      uber: `€${s.uberGross.toFixed(2)}`,
+      bolt: `€${s.boltGross.toFixed(2)}`,
+      gross: `€${gross.toFixed(2)}`,
+      fleet: `€${s.fleetCharge.toFixed(2)}`,
+      iva: `€${s.ivaWithheld.toFixed(2)}`,
+      fuel: `€${s.fuelElectricCost.toFixed(2)}`,
+      via: `€${s.viaVerde.toFixed(2)}`,
+      net: `€${s.netPaid.toFixed(2)}`,
+      status: s.status.toUpperCase(),
+    };
 
-    doc.text(
-      `Fleet Chg: €${settlement.fleetCharge.toFixed(2)}    IVA: €${settlement.ivaWithheld.toFixed(2)}    Fuel/Elec: €${settlement.fuelElectricCost.toFixed(2)}    Via Verde: €${settlement.viaVerde.toFixed(2)}    Other: €${settlement.otherDeductions.toFixed(2)}`,
-      left, y
-    );
-    y += 15;
+    let x = tableLeft;
+    doc.fontSize(8).font('Helvetica');
+    cols.forEach((c) => {
+      if (c.key === 'net') doc.font('Helvetica-Bold');
+      doc.text(rowVals[c.key], x + 4, y + 6, { width: c.width - 6, align: c.align });
+      if (c.key === 'net') doc.font('Helvetica');
+      x += c.width;
+    });
 
-    doc.fontSize(11).font('Helvetica-Bold').fillColor('#000')
-      .text(`Net Paid: €${settlement.netPaid.toFixed(2)}`, left, y, { continued: true })
-      .font('Helvetica').fontSize(9).fillColor('#555')
-      .text(`   (${settlement.status})`);
-    y += 16;
-
-    doc.moveTo(left, y).lineTo(right, y).strokeColor('#ddd').stroke();
-    y += 12;
+    y += rowHeight;
   });
+
+  // Bottom border + totals row
+  doc.moveTo(tableLeft, y).lineTo(tableLeft + tableWidth, y).strokeColor('#999').stroke();
+  y += 3;
+  doc.rect(tableLeft, y, tableWidth, rowHeight + 4).fill('#e8ecf3');
+  doc.fillColor('#000');
+  y += 6;
+
+  doc.fontSize(9).font('Helvetica-Bold');
+
+  const colX = {};
+  let runningX = tableLeft;
+  cols.forEach((c) => { colX[c.key] = runningX; runningX += c.width; });
+
+  doc.text('TOTALS:', colX['week'], y, { width: cols.find((c) => c.key === 'week').width, align: 'right' });
+  doc.text(`€${totalGross.toFixed(2)}`, colX['gross'] + 4, y, { width: cols.find((c) => c.key === 'gross').width - 6, align: 'right' });
+  doc.text(`€${totalFleet.toFixed(2)}`, colX['fleet'] + 4, y, { width: cols.find((c) => c.key === 'fleet').width - 6, align: 'right' });
+  doc.text(`€${totalIva.toFixed(2)}`, colX['iva'] + 4, y, { width: cols.find((c) => c.key === 'iva').width - 6, align: 'right' });
+  doc.text(`€${totalFuel.toFixed(2)}`, colX['fuel'] + 4, y, { width: cols.find((c) => c.key === 'fuel').width - 6, align: 'right' });
+  doc.text(`€${totalVia.toFixed(2)}`, colX['via'] + 4, y, { width: cols.find((c) => c.key === 'via').width - 6, align: 'right' });
+  doc.text(`€${totalNet.toFixed(2)}`, colX['net'] + 4, y, { width: cols.find((c) => c.key === 'net').width - 6, align: 'right' });
 
   doc.end();
 });
