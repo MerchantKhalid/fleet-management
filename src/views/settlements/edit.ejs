@@ -1,0 +1,45 @@
+<%- include('../partials/head') %>
+
+<h1>Edit Settlement</h1>
+<div class="meta">Update the figures below — the net payout and linked IVA refund recalculate automatically.</div>
+
+<div class="panel">
+  <form method="POST" action="/settlements/<%= settlement.id %>?_method=PUT">
+    <div class="form-grid">
+      <div class="field">
+        <label>Driver</label>
+        <select name="driverId" required>
+          <% drivers.forEach(d => { %>
+            <option value="<%= d.id %>" <%= settlement.driverId === d.id ? 'selected' : '' %>>
+              <%= d.name %><%= d.currentCar ? ' (' + d.currentCar.plate + ')' : '' %>
+            </option>
+          <% }) %>
+        </select>
+      </div>
+      <div class="field">
+        <label>Week Start</label>
+        <input type="date" name="weekStart" value="<%= settlement.weekStart.toISOString().slice(0,10) %>" required>
+      </div>
+      <div class="field">
+        <label>Week End</label>
+        <input type="date" name="weekEnd" value="<%= settlement.weekEnd.toISOString().slice(0,10) %>" required>
+      </div>
+      <div class="field"><label>Uber Earnings</label><input type="number" step="0.01" name="uberGross" value="<%= settlement.uberGross %>"></div>
+      <div class="field"><label>Bolt Earnings</label><input type="number" step="0.01" name="boltGross" value="<%= settlement.boltGross %>"></div>
+      <div class="field"><label>Fleet Charge (rental)</label><input type="number" step="0.01" name="fleetCharge" value="<%= settlement.fleetCharge %>"></div>
+      <div class="field"><label>Fuel / Electric Bill</label><input type="number" step="0.01" name="fuelElectricCost" value="<%= settlement.fuelElectricCost %>"></div>
+      <div class="field"><label>Via Verde</label><input type="number" step="0.01" name="viaVerde" value="<%= settlement.viaVerde %>"></div>
+      <div class="field"><label>Other Deductions</label><input type="number" step="0.01" name="otherDeductions" value="<%= settlement.otherDeductions %>"></div>
+    </div>
+    <div class="form-actions">
+      <button class="btn" type="submit">Save Changes</button>
+      <a class="btn secondary" href="/settlements">Cancel</a>
+    </div>
+    <p style="padding:0 16px 16px; color:var(--muted); font-size:12.5px;">
+      Net = Gross (Uber+Bolt) − Fleet Charge − IVA (6% of gross, withheld) − Fuel/Electric − Via Verde − Other.
+      The linked IVA Refund record for this settlement is updated to match.
+    </p>
+  </form>
+</div>
+
+<%- include('../partials/foot') %>
