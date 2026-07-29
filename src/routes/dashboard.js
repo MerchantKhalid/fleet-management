@@ -8,10 +8,9 @@ router.get('/', async (req, res) => {
   const in7Days = dayjs().add(7, 'day').toDate();
   const now = new Date();
 
-  // --- Fleet Income date range (defaults to the current week, Mon-Sun) ---
   let { from, to } = req.query;
   if (!from && !to) {
-    const day = dayjs().day(); // 0 (Sun) - 6 (Sat)
+    const day = dayjs().day();
     const mondayOffset = (day + 6) % 7;
     from = dayjs().subtract(mondayOffset, 'day').format('YYYY-MM-DD');
     to = dayjs(from).add(6, 'day').format('YYYY-MM-DD');
@@ -26,21 +25,24 @@ router.get('/', async (req, res) => {
     if (rangeEnd) expenseWhere.date.lte = rangeEnd;
   }
 
-  const [activeDrivers, activeCars, expensesInRange, customPaymentsInRange] = await Promise.all([
+  const [activeDriversCount, activeCarsList, expensesInRange, customPaymentsInRange, override] = await Promise.all([
     prisma.driver.count({ where: { status: 'ACTIVE' } }),
-    prisma.car.count({ where: { status: 'ACTIVE' } }),
+    prisma.car.findMany({ where: { status: 'ACTIVE' }, select: { weeklyRentalCost: true, managerFee: true } }),
     prisma.expense.findMany({ where: expenseWhere }),
     prisma.customPayment.findMany({ where: expenseWhere }),
+    rangeStart && rangeEnd
+      ? prisma.fleetIncomeOverride.findUnique({ where: { weekStart_weekEnd: { weekStart: rangeStart, weekEnd: rangeEnd } } })
+      : null,
   ]);
 
-  // Fleet charges €25/week per active car; €5 of that goes out as a manager fee per active car;
-  // the fleet keeps the rest (typically €20). This is based on the current active car count
-  // (not on settlements actually entered), so it shows expected weekly totals even when 0
-  // settlements have been logged yet.
-  const FLEET_CHARGE_PER_CAR = 25;
-  const MANAGER_FEE_PER_CAR = 5;
-  const fleetChargeTotal = activeCars * FLEET_CHARGE_PER_CAR;
-  const managerFeeTotal = activeCars * MANAGER_FEE_PER_CAR;
+  const activeDrivers = activeDriversCount;
+  const activeCars = activeCarsList.length;
+
+  const calculatedFleetChargeTotal = activeCarsList.reduce((sum, c) => sum + (c.weeklyRentalCost || 0), 0);
+  const calculatedManagerFeeTotal = activeCarsList.reduce((sum, c) => sum + (c.managerFee || 0), 0);
+  const fleetChargeTotal = override ? override.fleetChargeTotal : calculatedFleetChargeTotal;
+  const managerFeeTotal = override ? override.managerFeeTotal : calculatedManagerFeeTotal;
+  const isOverridden = !!override;
   const fleetNetFromCars = fleetChargeTotal - managerFeeTotal;
   const expensesTotal = expensesInRange.reduce((sum, e) => sum + e.amount, 0);
   const customPaymentsTotal = customPaymentsInRange.reduce((sum, p) => sum + p.amount, 0);
@@ -66,11 +68,46 @@ router.get('/', async (req, res) => {
     to,
     fleetChargeTotal,
     managerFeeTotal,
+    calculatedFleetChargeTotal,
+    calculatedManagerFeeTotal,
+    isOverridden,
     fleetNetFromCars,
     expensesTotal,
     customPaymentsTotal,
     finalNetIncome,
   });
+});
+
+router.post('/fleet-totals', async (req, res) => {
+  const { from, to, fleetChargeTotal, managerFeeTotal } = req.body;
+  const weekStart = dayjs(from).startOf('day').toDate();
+  const weekEnd = dayjs(to).endOf('day').toDate();
+
+  await prisma.fleetIncomeOverride.upsert({
+    where: { weekStart_weekEnd: { weekStart, weekEnd } },
+    update: {
+      fleetChargeTotal: Number(fleetChargeTotal || 0),
+      managerFeeTotal: Number(managerFeeTotal || 0),
+    },
+    create: {
+      weekStart,
+      weekEnd,
+      fleetChargeTotal: Number(fleetChargeTotal || 0),
+      managerFeeTotal: Number(managerFeeTotal || 0),
+    },
+  });
+
+  res.redirect(`/?from=${from}&to=${to}`);
+});
+
+router.post('/fleet-totals/clear', async (req, res) => {
+  const { from, to } = req.body;
+  const weekStart = dayjs(from).startOf('day').toDate();
+  const weekEnd = dayjs(to).endOf('day').toDate();
+
+  await prisma.fleetIncomeOverride.deleteMany({ where: { weekStart, weekEnd } });
+
+  res.redirect(`/?from=${from}&to=${to}`);
 });
 
 module.exports = router;

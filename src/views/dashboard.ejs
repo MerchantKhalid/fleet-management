@@ -23,36 +23,55 @@
     </div>
   </form>
 
-  <table>
-    <tr><th>Item</th><th>Amount</th></tr>
-    <tr>
-      <td>Fleet Charge Collected (<%= activeCars %> active car<%= activeCars === 1 ? '' : 's' %> × €25)</td>
-      <td>€<%= fleetChargeTotal.toFixed(2) %></td>
-    </tr>
-    <tr>
-      <td>Manager Fees Paid Out (<%= activeCars %> active car<%= activeCars === 1 ? '' : 's' %> × €5)</td>
-      <td>-€<%= managerFeeTotal.toFixed(2) %></td>
-    </tr>
-    <tr>
-      <td><b>Fleet Net (before expenses)</b></td>
-      <td><b>€<%= fleetNetFromCars.toFixed(2) %></b></td>
-    </tr>
-    <tr>
-      <td>Custom Payments in period (<a href="/custom-payments">manage</a>)</td>
-      <td>+€<%= customPaymentsTotal.toFixed(2) %></td>
-    </tr>
-    <tr>
-      <td>Expenses in period (<a href="/expenses">manage</a>)</td>
-      <td>-€<%= expensesTotal.toFixed(2) %></td>
-    </tr>
-    <tr style="border-top:2px solid var(--border, #ccc);">
-      <td><b>Final Fleet Net Income</b></td>
-      <td><b style="font-size:1.2em;">€<%= finalNetIncome.toFixed(2) %></b></td>
-    </tr>
-  </table>
+  <form method="POST" action="/fleet-totals">
+    <input type="hidden" name="from" value="<%= from %>">
+    <input type="hidden" name="to" value="<%= to %>">
+    <table>
+      <tr><th>Item</th><th>Amount</th></tr>
+      <tr>
+        <td>Fleet Charge Collected (<%= activeCars %> active car<%= activeCars === 1 ? '' : 's' %>)</td>
+        <td>€<input type="number" step="0.01" name="fleetChargeTotal" value="<%= fleetChargeTotal.toFixed(2) %>" style="width:100px;"></td>
+      </tr>
+      <tr>
+        <td>Manager Fees Paid Out (<%= activeCars %> active car<%= activeCars === 1 ? '' : 's' %>)</td>
+        <td>-€<input type="number" step="0.01" name="managerFeeTotal" value="<%= managerFeeTotal.toFixed(2) %>" style="width:100px;"></td>
+      </tr>
+      <tr>
+        <td colspan="2" style="padding:6px 0;">
+          <button class="btn" type="submit">Save</button>
+          <% if (isOverridden) { %>
+            <span style="color:var(--muted); font-size:12.5px;">Manually edited for this period.</span>
+          <% } %>
+        </td>
+      </tr>
+      <tr>
+        <td><b>Fleet Net (before expenses)</b></td>
+        <td><b>€<%= fleetNetFromCars.toFixed(2) %></b></td>
+      </tr>
+      <tr>
+        <td>Custom Payments in period (<a href="/custom-payments">manage</a>)</td>
+        <td>+€<%= customPaymentsTotal.toFixed(2) %></td>
+      </tr>
+      <tr>
+        <td>Expenses in period (<a href="/expenses">manage</a>)</td>
+        <td>-€<%= expensesTotal.toFixed(2) %></td>
+      </tr>
+      <tr style="border-top:2px solid var(--border, #ccc);">
+        <td><b>Final Fleet Net Income</b></td>
+        <td><b style="font-size:1.2em;">€<%= finalNetIncome.toFixed(2) %></b></td>
+      </tr>
+    </table>
+  </form>
+  <% if (isOverridden) { %>
+    <form method="POST" action="/fleet-totals/clear" style="padding:0 16px 14px;">
+      <input type="hidden" name="from" value="<%= from %>">
+      <input type="hidden" name="to" value="<%= to %>">
+      <button class="btn secondary" type="submit">Reset to calculated (€<%= calculatedFleetChargeTotal.toFixed(2) %> / €<%= calculatedManagerFeeTotal.toFixed(2) %>)</button>
+    </form>
+  <% } %>
   <p style="padding:0 16px 14px; color:var(--muted); font-size:12.5px;">
-    Fleet charges €25/week per active car; €5/car is paid out as a manager fee, leaving the fleet €20/car.
-    These totals are based on the current active car count, not on settlements entered for the period.
+    Fleet Charge Collected and Manager Fees Paid Out are editable above — type the real numbers for this period and click Save.
+    They start out pre-filled from each active car's rate (set on the <a href="/cars">Cars</a> page), but once you save a manual value it's remembered for this exact date range until you reset it.
     The 6% IVA withheld from driver earnings is tracked separately and returned to drivers who issue a green receipt — see IVA Refunds.
   </p>
 </div>

@@ -164,3 +164,15 @@ model CustomPayment {
   notes     String?
   createdAt DateTime @default(now())
 }
+
+
+model FleetIncomeOverride {
+  id               String   @id @default(cuid())
+  weekStart        DateTime // start of the dashboard date range this override applies to
+  weekEnd          DateTime // end of the dashboard date range this override applies to
+  fleetChargeTotal Float    // manually entered "Fleet Charge Collected" total for this period
+  managerFeeTotal  Float    // manually entered "Manager Fees Paid Out" total for this period
+  updatedAt        DateTime @updatedAt
+
+  @@unique([weekStart, weekEnd])
+}
