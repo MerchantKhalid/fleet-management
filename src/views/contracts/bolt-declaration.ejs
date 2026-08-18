@@ -1,0 +1,233 @@
+<%- include('../partials/head') %>
+
+<h1>Comodato (Bolt)</h1>
+<%- include('../partials/contractTabs', { active: 'bolt' }) %>
+<div class="meta">Preenche os dados do proprietário e do veículo — o contrato de comodato abaixo atualiza-se automaticamente. Descarrega em PDF quando estiver pronto.</div>
+
+<div class="contract-wrap">
+  <div class="contract-form panel">
+    <div class="panel-head"><h3>Dados do contrato</h3></div>
+    <div style="padding:14px 16px;">
+
+      <% if (drivers.length) { %>
+        <label class="c-label">Carregar matrícula/marca de um veículo existente (opcional)</label>
+        <select id="driverPicker" class="c-input">
+          <option value="">— seleciona um motorista —</option>
+          <% drivers.forEach(d => { %>
+            <option
+              value="<%= d.id %>"
+              data-plate="<%= d.currentCar ? d.currentCar.plate : '' %>"
+              data-make="<%= d.currentCar ? d.currentCar.make : '' %>"
+            ><%= d.name %><%= d.currentCar ? ' — ' + d.currentCar.plate : '' %></option>
+          <% }) %>
+        </select>
+        <p style="color:var(--muted); font-size:11.5px; margin:6px 0 16px;">
+          Isto preenche apenas a matrícula/marca com os dados já guardados. Os restantes campos continuam a ser
+          escritos à mão em cada contrato.
+        </p>
+      <% } %>
+
+      <fieldset>
+        <legend>Comodatário — Empresa (fixo — só mudar se necessário)</legend>
+        <label class="c-label">Nome da empresa</label>
+        <input class="c-input" data-f="company_name" value="BDCARS, LDA">
+        <label class="c-label">NIPC</label>
+        <input class="c-input" data-f="company_nipc" value="519320794">
+        <label class="c-label">Morada</label>
+        <input class="c-input" data-f="company_address" value="Praceta José Augusto Gouveia n.º 1, R/C D, 2660-284 Santo António dos Cavaleiros, Loures">
+        <label class="c-label">Representada pelo gerente</label>
+        <input class="c-input" data-f="company_manager" value="Sajjadur Rahman">
+      </fieldset>
+
+      <fieldset>
+        <legend>Comodante — Proprietário do veículo — muda a cada contrato</legend>
+        <label class="c-label">Nome completo</label>
+        <input class="c-input" data-f="owner_name" placeholder="Nome do proprietário">
+        <label class="c-label">Nº título de residência / cartão de residência</label>
+        <input class="c-input" data-f="owner_residence_number" placeholder="ex: 41177V73V">
+        <label class="c-label">Morada de residência</label>
+        <input class="c-input" data-f="owner_address" placeholder="Rua, nº, andar, código postal, cidade">
+      </fieldset>
+
+      <fieldset>
+        <legend>Veículo</legend>
+        <label class="c-label">Marca</label>
+        <input class="c-input" data-f="vehicle_brand" placeholder="ex: Renault">
+        <label class="c-label">Modelo</label>
+        <input class="c-input" data-f="vehicle_model" placeholder="ex: Zoe">
+        <label class="c-label">Matrícula</label>
+        <input class="c-input" data-f="vehicle_plate" placeholder="ex: BS-85-UI">
+        <label class="c-label">Data da primeira matrícula</label>
+        <input class="c-input" data-f="vehicle_first_reg" placeholder="dd/mm/aaaa">
+      </fieldset>
+
+      <fieldset>
+        <legend>Contrato</legend>
+        <label class="c-label">Duração</label>
+        <input class="c-input" data-f="contract_duration" value="um (1) ano, renovável por acordo escrito entre as partes">
+        <label class="c-label">Data de assinatura</label>
+        <input class="c-input" data-f="signing_date" placeholder="dd/mm/aaaa">
+      </fieldset>
+
+      <div class="c-actions">
+        <button class="btn" onclick="window.print()" type="button">Descarregar PDF</button>
+        <button class="btn secondary" onclick="resetContractForm()" type="button">Limpar dados do proprietário</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="contract-preview">
+    <div class="c-page" id="contractPage">
+      <h2 class="c-title">CONTRATO DE COMODATO</h2>
+
+      <p>Entre:</p>
+
+      <h3 class="c-clause">PRIMEIRO OUTORGANTE (COMODANTE)</h3>
+      <p>
+        <span class="c-fill" data-out="owner_name"></span>, titular do Cartão de Residência n.º
+        <span class="c-fill" data-out="owner_residence_number"></span>, residente na
+        <span class="c-fill" data-out="owner_address"></span>, proprietário e legítimo possuidor do veículo abaixo
+        identificado.
+      </p>
+
+      <h3 class="c-clause">SEGUNDO OUTORGANTE (COMODATÁRIO)</h3>
+      <p>
+        <span class="c-fill" data-out="company_name"></span>, pessoa coletiva n.º
+        <span class="c-fill" data-out="company_nipc"></span>, com sede na
+        <span class="c-fill" data-out="company_address"></span>, representada pelo seu gerente
+        <span class="c-fill" data-out="company_manager"></span>.
+      </p>
+
+      <h3 class="c-clause">CLÁUSULA 1.ª</h3>
+      <h4 class="c-clause-name">(Objeto)</h4>
+      <p>
+        O Comodante declara ser o legítimo proprietário do veículo Marca
+        <span class="c-fill" data-out="vehicle_brand"></span>, Modelo
+        <span class="c-fill" data-out="vehicle_model"></span>, Matrícula
+        <span class="c-fill" data-out="vehicle_plate"></span>, Primeira Matrícula:
+        <span class="c-fill" data-out="vehicle_first_reg"></span>, cedendo gratuitamente ao Comodatário a utilização
+        do referido veículo para a exploração da atividade de transporte individual e remunerado de passageiros em
+        veículos descaracterizados (TVDE), através das plataformas Uber, Bolt e outras legalmente autorizadas em
+        Portugal.
+      </p>
+
+      <h3 class="c-clause">CLÁUSULA 2.ª</h3>
+      <h4 class="c-clause-name">(Natureza)</h4>
+      <p>
+        O presente contrato constitui um Contrato de Comodato, nos termos do Código Civil Português. A cedência é
+        gratuita, não sendo devida qualquer renda ou pagamento.
+      </p>
+
+      <h3 class="c-clause">CLÁUSULA 3.ª</h3>
+      <h4 class="c-clause-name">(Obrigações do Comodante)</h4>
+      <p>
+        Manter a propriedade do veículo; fornecer a documentação necessária ao registo TVDE; manter documentação
+        válida; assegurar seguro obrigatório ou autorizar a respetiva cobertura; comunicar quaisquer alterações
+        relevantes.
+      </p>
+
+      <h3 class="c-clause">CLÁUSULA 4.ª</h3>
+      <h4 class="c-clause-name">(Obrigações do Comodatário)</h4>
+      <p>
+        Utilizar o veículo apenas na atividade TVDE; cumprir toda a legislação aplicável; manter o veículo em bom
+        estado de conservação, efetuando manutenção e inspeções; devolver o veículo em bom estado, salvo desgaste
+        normal.
+      </p>
+
+      <h3 class="c-clause">CLÁUSULA 5.ª</h3>
+      <h4 class="c-clause-name">(Seguro)</h4>
+      <p>
+        O veículo permanecerá coberto por seguro válido nos termos da legislação portuguesa. Quando necessário, a
+        apólice deverá reconhecer expressamente o presente contrato ou ser acompanhada por declaração da seguradora.
+      </p>
+
+      <h3 class="c-clause">CLÁUSULA 6.ª</h3>
+      <h4 class="c-clause-name">(Duração)</h4>
+      <p>
+        O contrato entra em vigor na data da assinatura e vigorará por um período de
+        <span class="c-fill" data-out="contract_duration"></span>.
+      </p>
+
+      <h3 class="c-clause">CLÁUSULA 7.ª</h3>
+      <h4 class="c-clause-name">(Devolução)</h4>
+      <p>
+        No termo do contrato, o Comodatário devolverá o veículo ao Comodante em bom estado de conservação,
+        considerando o desgaste normal decorrente da utilização.
+      </p>
+
+      <h3 class="c-clause">CLÁUSULA 8.ª</h3>
+      <h4 class="c-clause-name">(Cessação)</h4>
+      <p>
+        Qualquer das partes poderá denunciar o contrato mediante aviso prévio escrito de 30 dias. A resolução
+        imediata poderá ocorrer em caso de incumprimento contratual ou de perda dos requisitos legais do veículo.
+      </p>
+
+      <h3 class="c-clause">CLÁUSULA 9.ª</h3>
+      <h4 class="c-clause-name">(Lei Aplicável)</h4>
+      <p>
+        O presente contrato rege-se pela legislação portuguesa. Qualquer litígio será submetido aos tribunais
+        competentes de Portugal.
+      </p>
+
+      <p>Data: <span class="c-fill" data-out="signing_date"></span></p>
+
+      <div class="c-sign-block">
+        <div>
+          O COMODANTE,
+          <div class="c-sign-line"><span class="c-fill" data-out="owner_name"></span></div>
+        </div>
+        <div>
+          O COMODATÁRIO,
+          <div class="c-sign-line">
+            <span class="c-fill" data-out="company_name"></span><br>
+            Representado por <span class="c-fill" data-out="company_manager"></span> – Gerente.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const cInputs = document.querySelectorAll('[data-f]');
+  const cOuts = {};
+  document.querySelectorAll('#contractPage [data-out]').forEach(el => {
+    const key = el.dataset.out;
+    (cOuts[key] = cOuts[key] || []).push(el);
+  });
+
+  function renderContract(){
+    cInputs.forEach(inp => {
+      const key = inp.dataset.f;
+      const val = inp.value.trim();
+      (cOuts[key] || []).forEach(el => {
+        el.textContent = val || '[' + key + ']';
+        el.classList.toggle('c-empty', !val);
+      });
+    });
+  }
+  cInputs.forEach(inp => inp.addEventListener('input', renderContract));
+  renderContract();
+
+  function resetContractForm(){
+    document.querySelectorAll('.contract-form fieldset:nth-of-type(2) input, .contract-form fieldset:nth-of-type(3) input').forEach(inp => {
+      inp.value = '';
+    });
+    const picker = document.getElementById('driverPicker');
+    if (picker) picker.value = '';
+    renderContract();
+  }
+
+  const picker = document.getElementById('driverPicker');
+  if (picker) {
+    picker.addEventListener('change', () => {
+      const opt = picker.selectedOptions[0];
+      if (!opt || !opt.value) return;
+      document.querySelector('[data-f="vehicle_plate"]').value = opt.dataset.plate || '';
+      document.querySelector('[data-f="vehicle_brand"]').value = opt.dataset.make || '';
+      renderContract();
+    });
+  }
+</script>
+
+<%- include('../partials/foot') %>

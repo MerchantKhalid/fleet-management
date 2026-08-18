@@ -1,0 +1,182 @@
+<%- include('../partials/head') %>
+
+<h1>Declaração Uber</h1>
+<%- include('../partials/contractTabs', { active: 'uber' }) %>
+<div class="meta">Preenche os dados do motorista e do veículo — a declaração de autorização Uber abaixo atualiza-se automaticamente. Descarrega em PDF quando estiver pronto.</div>
+
+<div class="contract-wrap">
+  <div class="contract-form panel">
+    <div class="panel-head"><h3>Dados da declaração</h3></div>
+    <div style="padding:14px 16px;">
+
+      <% if (drivers.length) { %>
+        <label class="c-label">Carregar dados de um motorista existente (opcional)</label>
+        <select id="driverPicker" class="c-input">
+          <option value="">— seleciona um motorista —</option>
+          <% drivers.forEach(d => { %>
+            <option
+              value="<%= d.id %>"
+              data-name="<%= d.name %>"
+              data-plate="<%= d.currentCar ? d.currentCar.plate : '' %>"
+              data-make="<%= d.currentCar ? d.currentCar.make : '' %>"
+            ><%= d.name %><%= d.currentCar ? ' — ' + d.currentCar.plate : '' %></option>
+          <% }) %>
+        </select>
+        <p style="color:var(--muted); font-size:11.5px; margin:6px 0 16px;">
+          Isto preenche o nome e a matrícula/marca do veículo com os dados já guardados. Os restantes campos
+          continuam a ser escritos à mão em cada declaração.
+        </p>
+      <% } %>
+
+      <fieldset>
+        <legend>Operador TVDE (fixo — só mudar se necessário)</legend>
+        <label class="c-label">Nome da entidade</label>
+        <input class="c-input" data-f="operator_name" value="BDCARS LDA">
+        <label class="c-label">Morada</label>
+        <input class="c-input" data-f="operator_address" value="Rua Alves Redol, Nº 1, 3º Esq., 2620-127 Póvoa Santo Adrião, Lisboa">
+        <label class="c-label">NIPC / número de matrícula</label>
+        <input class="c-input" data-f="operator_nipc" value="519320794">
+      </fieldset>
+
+      <fieldset>
+        <legend>Motorista — muda a cada declaração</legend>
+        <label class="c-label">Nome completo</label>
+        <input class="c-input" data-f="driver_name" placeholder="Nome do motorista">
+        <label class="c-label">Morada / domicílio</label>
+        <input class="c-input" data-f="driver_address" placeholder="Rua, nº, andar, código postal, cidade">
+        <label class="c-label">Nº do título de residência</label>
+        <input class="c-input" data-f="driver_residence_number" placeholder="ex: 4T977G908">
+        <div class="c-row2">
+          <div>
+            <label class="c-label">Nº Certificado CMTVDE</label>
+            <input class="c-input" data-f="driver_cmtvde" placeholder="ex: 667886/2023">
+          </div>
+          <div>
+            <label class="c-label">Válido até</label>
+            <input class="c-input" data-f="driver_cmtvde_validade" placeholder="dd/mm/aaaa">
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Veículo</legend>
+        <label class="c-label">Marca / Modelo</label>
+        <input class="c-input" data-f="vehicle_brand" placeholder="ex: Citroen Ec4">
+        <label class="c-label">Matrícula</label>
+        <input class="c-input" data-f="vehicle_plate" placeholder="ex: CF-11-AN">
+        <label class="c-label">Data da primeira matrícula</label>
+        <input class="c-input" data-f="vehicle_first_reg" placeholder="dd/mm/aaaa">
+      </fieldset>
+
+      <fieldset>
+        <legend>Assinatura</legend>
+        <label class="c-label">Data</label>
+        <input class="c-input" data-f="signing_date" placeholder="dd/mm/aaaa">
+      </fieldset>
+
+      <div class="c-actions">
+        <button class="btn" onclick="window.print()" type="button">Descarregar PDF</button>
+        <button class="btn secondary" onclick="resetContractForm()" type="button">Limpar dados do motorista</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="contract-preview">
+    <div class="c-page" id="contractPage">
+      <h2 class="c-title">STATEMENT OF AUTHORIZATION FOR VEHICLE REGISTRATION ON TVDE ELECTRONIC PLATFORM</h2>
+
+      <p>
+        <span class="c-fill" data-out="driver_name"></span>, with domicile at
+        <span class="c-fill" data-out="driver_address"></span>, holder of the Residence Card No.
+        <span class="c-fill" data-out="driver_residence_number"></span>, driver in an uncharacterized vehicle from an
+        electronic platform (TVDE), registered and duly licensed with the Instituto da Mobilidade e dos Transportes,
+        I.P., with Certificado CMTVDE No. <span class="c-fill" data-out="driver_cmtvde"></span>, valid until
+        <span class="c-fill" data-out="driver_cmtvde_validade"></span>, as the authorized driver of the vehicle with
+        the car brand <span class="c-fill" data-out="vehicle_brand"></span>, license plate
+        <span class="c-fill" data-out="vehicle_plate"></span>, with first registration date
+        <span class="c-fill" data-out="vehicle_first_reg"></span>, by the present statement authorizes the entity
+        <span class="c-fill" data-out="operator_name"></span>, with registered office at
+        <span class="c-fill" data-out="operator_address"></span>, registration number and NIPC
+        <span class="c-fill" data-out="operator_nipc"></span>, duly licensed as a TVDE Operator, to proceed with the
+        registration and enrolment of the Vehicle on the Uber App, under the terms and for the purposes of Article 12
+        of Law No. 45/2018, of 10 August (TVDE Law).
+      </p>
+
+      <p>
+        Without prejudice to the TVDE Operator's obligations to ensure full and permanent compliance with the
+        requirements for the exercise of the activity provided in the TVDE Law, including those relating to vehicles
+        and drivers for the provision of TVDE services, the Driver, by this statement, declares and guarantees that,
+        along with the Vehicle, during the period of this statement, complies and will comply with all applicable
+        legal and regulatory requirements, especially those provided in the TVDE Law, namely that (i) it is a light
+        passenger vehicle with national license plate, (ii) with capacity not exceeding nine seats, including the
+        driver's, (iii) that the Vehicle is less than seven years old from the date of first registration, (iv) that
+        the Vehicle has been and/or will be submitted for technical inspection in accordance with Portuguese
+        legislation, (v) that the Vehicle is insured against third-party liability and personal accident, including
+        passengers carried and their losses, (vi) that the Vehicle circulates without any external sign indicating
+        the type of service it provides, with the exception of the removable TVDE label visible from the outside,
+        and (vii) that the Vehicle has no advertising either outside or inside.
+      </p>
+
+      <p>
+        If the Vehicle needs to be replaced or if there is a change in the information contained in this
+        declaration, the Driver undertakes to regularize the respective situation and/or, if necessary, submit a new
+        declaration accordingly.
+      </p>
+
+      <div class="c-sign-block">
+        <div>
+          By the Driver,
+          <div class="c-sign-line">
+            Name: <span class="c-fill" data-out="driver_name"></span><br>
+            Date: <span class="c-fill" data-out="signing_date"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const cInputs = document.querySelectorAll('[data-f]');
+  const cOuts = {};
+  document.querySelectorAll('#contractPage [data-out]').forEach(el => {
+    const key = el.dataset.out;
+    (cOuts[key] = cOuts[key] || []).push(el);
+  });
+
+  function renderContract(){
+    cInputs.forEach(inp => {
+      const key = inp.dataset.f;
+      const val = inp.value.trim();
+      (cOuts[key] || []).forEach(el => {
+        el.textContent = val || '[' + key + ']';
+        el.classList.toggle('c-empty', !val);
+      });
+    });
+  }
+  cInputs.forEach(inp => inp.addEventListener('input', renderContract));
+  renderContract();
+
+  function resetContractForm(){
+    document.querySelectorAll('.contract-form fieldset:nth-of-type(2) input, .contract-form fieldset:nth-of-type(3) input, .contract-form fieldset:nth-of-type(4) input').forEach(inp => {
+      inp.value = '';
+    });
+    const picker = document.getElementById('driverPicker');
+    if (picker) picker.value = '';
+    renderContract();
+  }
+
+  const picker = document.getElementById('driverPicker');
+  if (picker) {
+    picker.addEventListener('change', () => {
+      const opt = picker.selectedOptions[0];
+      if (!opt || !opt.value) return;
+      document.querySelector('[data-f="driver_name"]').value = opt.dataset.name || '';
+      document.querySelector('[data-f="vehicle_plate"]').value = opt.dataset.plate || '';
+      document.querySelector('[data-f="vehicle_brand"]').value = opt.dataset.make || '';
+      renderContract();
+    });
+  }
+</script>
+
+<%- include('../partials/foot') %>
