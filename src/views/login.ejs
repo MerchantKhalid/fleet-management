@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Login — TVDE Fleet Manager</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .login-wrap {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .login-card {
+      width: 100%;
+      max-width: 360px;
+      padding: 32px;
+      border-radius: 12px;
+      border: 1px solid #e2e2e2;
+      background: #fff;
+    }
+    .login-card h1 {
+      font-size: 1.25rem;
+      margin: 0 0 24px;
+      text-align: center;
+    }
+    .login-card label {
+      display: block;
+      font-size: 0.85rem;
+      margin-bottom: 4px;
+    }
+    .login-card input {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 16px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      box-sizing: border-box;
+    }
+    .login-card button {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 6px;
+      background: #111;
+      color: #fff;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    .login-error {
+      color: #c0392b;
+      font-size: 0.85rem;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-wrap">
+    <div class="login-card">
+      <h1>BDCars Fleet — Sign in</h1>
+      <% if (error) { %>
+        <div class="login-error"><%= error %></div>
+      <% } %>
+      <form method="POST" action="/login">
+        <label for="username">Username</label>
+        <input type="text" id="username" name="username" required autofocus>
+
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" required>
+
+        <button type="submit">Sign in</button>
+      </form>
+    </div>
+  </div>
+</body>
+</html>
