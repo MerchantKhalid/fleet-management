@@ -50,6 +50,9 @@ a{color:var(--accent);}
 
 /* --- Settlement history table --- */
 .table-scroll{overflow-x:auto;}
+.pagination{display:flex; align-items:center; justify-content:center; gap:14px; padding:14px 16px;}
+.pagination-info{color:var(--muted); font-size:12.5px;}
+.pagination .btn.disabled{opacity:.4; pointer-events:none;}
 .settlement-table{min-width:900px;}
 .settlement-table th, .settlement-table td{white-space:nowrap;}
 .driver-link{color:var(--text); font-weight:600; text-decoration:none; border-bottom:1px solid transparent;}

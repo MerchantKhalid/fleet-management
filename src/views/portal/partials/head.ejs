@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Driver Portal — BDCars Fleet</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .portal-topbar{display:flex; align-items:center; justify-content:space-between; padding:16px 26px; border-bottom:1px solid var(--line); background:var(--surface);}
+    .portal-topbar .brand{margin-bottom:0;}
+    .portal-topbar form{margin:0;}
+    .portal-topbar .btn{padding:7px 14px;}
+    .main{max-width:900px; margin:0 auto; padding:26px 20px;}
+    @media (max-width:768px){ .portal-topbar{padding:14px 16px;} }
+  </style>
+</head>
+<body>
+<div class="portal-topbar">
+  <div class="brand"><span class="dot"></span>BDCars Fleet — Driver Portal</div>
+  <form method="POST" action="/portal/logout">
+    <button type="submit" class="btn secondary">Logout</button>
+  </form>
+</div>
+<div class="main">

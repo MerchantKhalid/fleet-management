@@ -1,0 +1,55 @@
+<%- include('partials/head') %>
+
+<h1>Welcome, <%= driver.name %></h1>
+<div class="meta">Car: <%= driver.currentCar ? driver.currentCar.plate : 'No car assigned' %></div>
+
+<% if (expiryAlerts.length > 0) { %>
+  <div class="panel">
+    <div class="panel-head"><h3>Alerts</h3></div>
+    <div style="padding:14px 16px;">
+      <% expiryAlerts.forEach(a => { %>
+        <div class="alert"><%= a %></div>
+      <% }) %>
+    </div>
+  </div>
+<% } %>
+
+<div class="kpi-grid">
+  <div class="kpi"><div class="label">IVA Currently Withheld</div><div class="value">€<%= ivaWithheldTotal.toFixed(2) %></div></div>
+  <div class="kpi"><div class="label">IVA Refunded to Date</div><div class="value">€<%= ivaRefundedTotal.toFixed(2) %></div></div>
+</div>
+
+<div class="panel">
+  <div class="panel-head"><h3>My Settlements</h3></div>
+  <div class="table-scroll">
+  <table>
+    <tr>
+      <th>Week</th><th>Gross</th><th>Net Paid</th><th>Status</th><th class="col-actions">Payslip</th>
+    </tr>
+    <% settlements.forEach(s => { %>
+      <tr>
+        <td><%= s.weekStart.toISOString().slice(0,10) %> → <%= s.weekEnd.toISOString().slice(0,10) %></td>
+        <td>€<%= (s.uberGross + s.boltGross).toFixed(2) %></td>
+        <td>€<%= s.netPaid.toFixed(2) %></td>
+        <td><span class="badge <%= s.status === 'PAID' ? 'ok' : 'warn' %>"><%= s.status %></span></td>
+        <td><a class="btn btn-sm secondary" href="/portal/settlements/<%= s.id %>/payslip">Download PDF</a></td>
+      </tr>
+    <% }) %>
+    <% if (settlements.length === 0) { %>
+      <tr><td colspan="5" class="empty-row">No settlements yet.</td></tr>
+    <% } %>
+  </table>
+  </div>
+
+  <% if (totalPages > 1) {
+       const qs = (p) => '/portal?page=' + p;
+  %>
+    <div class="pagination">
+      <a class="btn btn-sm secondary <% if (page <= 1) { %>disabled<% } %>" href="<%= page > 1 ? qs(page - 1) : '#' %>">← Prev</a>
+      <span class="pagination-info">Page <%= page %> of <%= totalPages %> (<%= totalCount %> total)</span>
+      <a class="btn btn-sm secondary <% if (page >= totalPages) { %>disabled<% } %>" href="<%= page < totalPages ? qs(page + 1) : '#' %>">Next →</a>
+    </div>
+  <% } %>
+</div>
+
+<%- include('partials/foot') %>

@@ -1,3 +1,4 @@
+const bcrypt = require('bcryptjs');
 const express = require('express');
 const router = express.Router();
 const prisma = require('../db');
@@ -108,6 +109,19 @@ router.delete('/:id', async (req, res) => {
     await prisma.driver.delete({ where: { id: req.params.id } });
   }
   res.redirect('/drivers');
+});
+
+// SET / CLEAR PORTAL PASSWORD — lets this driver log in to the self-service portal.
+router.post('/:id/portal-password', async (req, res) => {
+  const { action, portalPassword } = req.body;
+
+  if (action === 'clear') {
+    await prisma.driver.update({ where: { id: req.params.id }, data: { portalPasswordHash: null } });
+  } else if (portalPassword) {
+    const hash = await bcrypt.hash(portalPassword, 10);
+    await prisma.driver.update({ where: { id: req.params.id }, data: { portalPasswordHash: hash } });
+  }
+  res.redirect('/drivers/' + req.params.id);
 });
 
 module.exports = router;

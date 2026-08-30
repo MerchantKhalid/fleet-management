@@ -22,9 +22,11 @@ model Driver {
   phone                String?
   email                String?
   iban                 String?
-  carOwnership         String?   // OWNED | RENT — whether the driver's car is company-owned or a rented car
-  status               String    @default("ACTIVE") // ACTIVE | INACTIVE
+  carOwnership         String?
+  status               String    @default("ACTIVE")
   createdAt            DateTime  @default(now())
+
+  portalPasswordHash   String?   // set by admin to enable this driver's self-service portal login
 
   assignments          AssignmentHistory[]
   settlements          WeeklySettlement[]
@@ -176,3 +178,5 @@ model FleetIncomeOverride {
 
   @@unique([weekStart, weekEnd])
 }
+
+

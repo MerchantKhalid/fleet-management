@@ -4,6 +4,36 @@
 <div class="meta">6% withheld weekly, refunded once the driver issues the green receipt</div>
 
 <div class="panel">
+  <div class="panel-head"><h3>Add Manual Refund</h3></div>
+  <form method="POST" action="/iva-refunds">
+    <div class="form-grid">
+      <div class="field">
+        <label>Driver</label>
+        <select name="driverId" required>
+          <option value="" disabled selected>Select driver</option>
+          <% drivers.forEach(d => { %>
+            <option value="<%= d.id %>"><%= d.name %></option>
+          <% }) %>
+        </select>
+      </div>
+      <div class="field"><label>Period Start</label><input type="date" name="periodStart"></div>
+      <div class="field"><label>Period End</label><input type="date" name="periodEnd"></div>
+      <div class="field"><label>Amount (€)</label><input type="number" step="0.01" name="amount" required></div>
+      <div class="field"><label>Receipt Ref</label><input name="receiptRef" placeholder="Optional"></div>
+      <div class="field">
+        <label>Status</label>
+        <select name="status">
+          <option value="WITHHELD">PENDING (withheld)</option>
+          <option value="REFUNDED">PAID (refunded)</option>
+        </select>
+      </div>
+      <div class="field"><label>Paid On (if PAID)</label><input type="date" name="refundedAt"></div>
+    </div>
+    <div class="form-actions"><button class="btn" type="submit">Add Refund</button></div>
+  </form>
+</div>
+
+<div class="panel">
   <div class="panel-head"><h3>All Refunds</h3></div>
   <form method="GET" action="/iva-refunds" class="form-grid" style="padding:14px 16px 0;">
     <div class="field"><label>From (period start)</label><input type="date" name="from" value="<%= from %>"></div>
@@ -62,6 +92,16 @@
     <% } %>
   </table>
   </div>
+
+  <% if (totalPages > 1) {
+       const qs = (p) => { const params = new URLSearchParams(); if (from) params.set('from', from); if (to) params.set('to', to); params.set('page', p); return '/iva-refunds?' + params.toString(); };
+  %>
+    <div class="pagination">
+      <a class="btn btn-sm secondary <% if (page <= 1) { %>disabled<% } %>" href="<%= page > 1 ? qs(page - 1) : '#' %>">← Prev</a>
+      <span class="pagination-info">Page <%= page %> of <%= totalPages %> (<%= totalCount %> total)</span>
+      <a class="btn btn-sm secondary <% if (page >= totalPages) { %>disabled<% } %>" href="<%= page < totalPages ? qs(page + 1) : '#' %>">Next →</a>
+    </div>
+  <% } %>
 </div>
 
 <%- include('../partials/foot') %>

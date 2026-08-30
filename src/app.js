@@ -27,6 +27,8 @@ app.use(session({
 // Public routes (no login required)
 app.use('/', require('./routes/auth'));
 
+app.use('/portal', require('./routes/portal'));
+
 // Everything below this line requires login
 app.use(requireAuth);
 

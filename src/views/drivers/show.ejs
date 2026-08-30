@@ -19,4 +19,27 @@
   <a class="btn secondary" href="/drivers">Back to Drivers</a>
 </div>
 
+<div class="panel">
+  <div class="panel-head"><h3>Driver Portal Access</h3></div>
+  <div style="padding:14px 16px;">
+    <% if (driver.portalPasswordHash) { %>
+      <p style="margin:0 0 12px;"><span class="badge ok">ENABLED</span> This driver can sign in at <code>/portal/login</code> using their email (<%= driver.email || 'no email set — add one below' %>) and their portal password.</p>
+    <% } else { %>
+      <p style="margin:0 0 12px; color:var(--muted);">Portal access is not enabled for this driver yet.</p>
+    <% } %>
+    <% if (!driver.email) { %>
+      <p style="color:var(--warn); margin:0 0 12px;">⚠ This driver has no email on file — add one (Edit) before enabling portal access, since email is their portal username.</p>
+    <% } %>
+    <form method="POST" action="/drivers/<%= driver.id %>/portal-password" class="form-grid" style="padding:0;">
+      <div class="field"><label>Set Portal Password</label><input type="text" name="portalPassword" placeholder="Type a password for this driver"></div>
+      <div class="field" style="align-self:flex-end;">
+        <button class="btn" type="submit">Save Password</button>
+        <% if (driver.portalPasswordHash) { %>
+          <button class="btn danger" type="submit" name="action" value="clear" onclick="return confirm('Disable portal access for this driver?');">Disable Access</button>
+        <% } %>
+      </div>
+    </form>
+  </div>
+</div>
+
 <%- include('../partials/foot') %>
