@@ -14,10 +14,21 @@
   </div>
 <% } %>
 
-<div class="kpi-grid">
+<!-- <div class="kpi-grid">
   <div class="kpi"><div class="label">IVA Currently Withheld</div><div class="value">€<%= ivaWithheldTotal.toFixed(2) %></div></div>
   <div class="kpi"><div class="label">IVA Refunded to Date</div><div class="value">€<%= ivaRefundedTotal.toFixed(2) %></div></div>
-</div>
+</div> -->
+
+
+
+
+
+ <div class="kpi-grid">
+  <div class="kpi"><div class="label">IVA Currently Withheld</div><div class="value" style="filter:blur(8px); user-select:none; pointer-events:none;" aria-hidden="true">€000.00</div></div>
+ <div class="kpi"><div class="label">IVA Refunded to Date</div><div class="value" style="filter:blur(8px); user-select:none; pointer-events:none;" aria-hidden="true">€000.00</div></div>
+</div> 
+
+
 
 <div class="panel">
   <div class="panel-head"><h3>My Settlements</h3></div>
