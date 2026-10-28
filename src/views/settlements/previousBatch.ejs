@@ -1,0 +1,111 @@
+<%- include('../partials/head') %>
+
+<h1>Weekly Batch Entry</h1>
+<%- include('../partials/settlementTabs', { active: 'batch' }) %>
+<div class="meta">Pick the week once, then fill in every driver's numbers below and save them all together. Drivers already saved for this week show as read-only — no duplicates. Rows left blank are simply skipped, so you can save some drivers now and come back for the rest later.</div>
+
+<div class="panel">
+  <div class="panel-head"><h3>Week</h3></div>
+  <form method="GET" action="/settlements/batch" class="batch-week-form">
+    <div class="field"><label>Week Start</label><input type="date" name="from" value="<%= from %>"></div>
+    <div class="field"><label>Week End</label><input type="date" name="to" value="<%= to %>"></div>
+    <button class="btn" type="submit">Load Week</button>
+  </form>
+</div>
+
+<div class="panel">
+  <div class="panel-head">
+    <h3>Drivers — <%= new Date(from).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) %> – <%= new Date(to).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) %></h3>
+    <span class="badge info"><%= drivers.length %> active drivers</span>
+  </div>
+
+  <form method="POST" action="/settlements/batch" id="batchForm">
+    <input type="hidden" name="weekStart" value="<%= from %>">
+    <input type="hidden" name="weekEnd" value="<%= to %>">
+
+    <div class="table-scroll">
+      <table class="batch-table">
+        <tr>
+          <th>Driver</th>
+          <th>Uber</th>
+          <th>Bolt</th>
+          <th>Fleet Charge</th>
+          <th>Fuel/Elec</th>
+          <th>Via Verde</th>
+          <th>Other</th>
+          <th>Net (est.)</th>
+          <th>Status</th>
+        </tr>
+        <% drivers.forEach(d => {
+             const existing = existingByDriver[d.id];
+        %>
+          <tr>
+            <td>
+              <a class="driver-link" href="/drivers/<%= d.id %>"><%= d.name %></a>
+              <% if (d.currentCar) { %><br><span style="color:var(--muted); font-size:11.5px;"><%= d.currentCar.plate %></span><% } %>
+            </td>
+            <% if (existing) { %>
+              <td class="saved-cell">€<%= existing.uberGross.toFixed(2) %></td>
+              <td class="saved-cell">€<%= existing.boltGross.toFixed(2) %></td>
+              <td class="saved-cell">€<%= existing.fleetCharge.toFixed(2) %></td>
+              <td class="saved-cell">€<%= existing.fuelElectricCost.toFixed(2) %></td>
+              <td class="saved-cell">€<%= existing.viaVerde.toFixed(2) %></td>
+              <td class="saved-cell">€<%= existing.otherDeductions.toFixed(2) %></td>
+              <td class="batch-net">€<%= existing.netPaid.toFixed(2) %></td>
+              <td>
+                <span class="badge ok">Saved</span>
+                <a class="btn secondary btn-sm" href="/settlements/<%= existing.id %>/edit">Edit</a>
+              </td>
+            <% } else { %>
+              <td><input type="number" step="0.01" value="0" data-row="<%= d.id %>" data-k="uberGross" name="drivers[<%= d.id %>][uberGross]"></td>
+              <td><input type="number" step="0.01" value="0" data-row="<%= d.id %>" data-k="boltGross" name="drivers[<%= d.id %>][boltGross]"></td>
+              <td><input type="number" step="0.01" value="0" data-row="<%= d.id %>" data-k="fleetCharge" name="drivers[<%= d.id %>][fleetCharge]"></td>
+              <td><input type="number" step="0.01" value="0" data-row="<%= d.id %>" data-k="fuelElectricCost" name="drivers[<%= d.id %>][fuelElectricCost]"></td>
+              <td><input type="number" step="0.01" value="0" data-row="<%= d.id %>" data-k="viaVerde" name="drivers[<%= d.id %>][viaVerde]"></td>
+              <td><input type="number" step="0.01" value="0" data-row="<%= d.id %>" data-k="otherDeductions" name="drivers[<%= d.id %>][otherDeductions]"></td>
+              <td class="batch-net" id="net-<%= d.id %>">€0.00</td>
+              <td><span class="badge warn">Pending entry</span></td>
+            <% } %>
+          </tr>
+        <% }) %>
+        <% if (drivers.length === 0) { %>
+          <tr><td colspan="9" class="empty-row">No active drivers found.</td></tr>
+        <% } %>
+      </table>
+    </div>
+
+    <div class="form-actions">
+      <button class="btn" type="submit">Calculate & Save All</button>
+    </div>
+    <p class="batch-summary">
+      Net = Gross (Uber+Bolt) − Fleet Charge − IVA (6% of gross, withheld) − Fuel/Electric − Via Verde − Other.
+      Saved rows are skipped automatically if you reload this week later.
+    </p>
+  </form>
+</div>
+
+<script>
+  const IVA_RATE = 0.06;
+
+  function round2(n){ return Math.round(n * 100) / 100; }
+
+  function calcNet(row){
+    const g = (row.uberGross || 0) + (row.boltGross || 0);
+    const ivaBase = round2(g - (row.fuelElectricCost || 0));
+    const iva = round2(ivaBase * IVA_RATE);
+    return round2(g - (row.fleetCharge || 0) - iva - (row.fuelElectricCost || 0) - (row.viaVerde || 0) - (row.otherDeductions || 0));
+  }
+
+  const rows = {};
+  document.querySelectorAll('.batch-table input[data-row]').forEach(inp => {
+    const id = inp.dataset.row;
+    (rows[id] = rows[id] || {})[inp.dataset.k] = 0;
+    inp.addEventListener('input', () => {
+      rows[id][inp.dataset.k] = Number(inp.value) || 0;
+      const netEl = document.getElementById('net-' + id);
+      if (netEl) netEl.textContent = '€' + calcNet(rows[id]).toFixed(2);
+    });
+  });
+</script>
+
+<%- include('../partials/foot') %>

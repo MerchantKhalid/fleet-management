@@ -63,6 +63,26 @@
       <a class="btn secondary" href="/export/all-payslips?from=<%= from %>&to=<%= to %>">Download All (PDF)</a>
     </div>
   </form>
+
+   <% if (hasFilter) {
+       const totUber  = settlements.reduce((a, s) => a + s.uberGross, 0);
+       const totBolt  = settlements.reduce((a, s) => a + s.boltGross, 0);
+       const totGross = totUber + totBolt;
+       const totNet   = settlements.reduce((a, s) => a + s.netPaid, 0);
+  %>
+    <div class="kpi-grid" style="padding:14px 16px 0; grid-template-columns:repeat(4,1fr);">
+      <div class="kpi"><div class="label">Uber Total</div><div class="value">€<%= totUber.toFixed(2) %></div></div>
+      <div class="kpi"><div class="label">Bolt Total</div><div class="value">€<%= totBolt.toFixed(2) %></div></div>
+      <div class="kpi"><div class="label">Gross (Uber + Bolt)</div><div class="value">€<%= totGross.toFixed(2) %></div></div>
+      <div class="kpi"><div class="label">Net Paid Total</div><div class="value">€<%= totNet.toFixed(2) %></div></div>
+    </div>
+  <% } %>
+
+
+
+
+
+
   <div class="table-scroll">
   <table class="settlement-table">
     <colgroup>

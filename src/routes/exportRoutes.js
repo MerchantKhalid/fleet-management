@@ -440,6 +440,8 @@ router.get('/all-payslips', async (req, res) => {
   y = drawHeaderRow(y);
 
   let totalGross = 0;
+  let totalUber = 0;
+  let totalBolt = 0;
   let totalFleet = 0;
   let totalIva = 0;
   let totalFuel = 0;
@@ -455,6 +457,8 @@ router.get('/all-payslips', async (req, res) => {
 
     const gross = s.uberGross + s.boltGross;
     totalGross += gross;
+    totalUber += s.uberGross;
+    totalBolt += s.boltGross;
     totalFleet += s.fleetCharge;
     totalIva += s.ivaWithheld;
     totalFuel += s.fuelElectricCost;
@@ -509,6 +513,8 @@ router.get('/all-payslips', async (req, res) => {
   cols.forEach((c) => { colX[c.key] = runningX; runningX += c.width; });
 
   doc.text('TOTALS:', colX['week'], y, { width: cols.find((c) => c.key === 'week').width, align: 'right' });
+    doc.text(`€${totalUber.toFixed(2)}`, colX['uber'] + 4, y, { width: cols.find((c) => c.key === 'uber').width - 6, align: 'right' });
+  doc.text(`€${totalBolt.toFixed(2)}`, colX['bolt'] + 4, y, { width: cols.find((c) => c.key === 'bolt').width - 6, align: 'right' });
   doc.text(`€${totalGross.toFixed(2)}`, colX['gross'] + 4, y, { width: cols.find((c) => c.key === 'gross').width - 6, align: 'right' });
   doc.text(`€${totalFleet.toFixed(2)}`, colX['fleet'] + 4, y, { width: cols.find((c) => c.key === 'fleet').width - 6, align: 'right' });
   doc.text(`€${totalIva.toFixed(2)}`, colX['iva'] + 4, y, { width: cols.find((c) => c.key === 'iva').width - 6, align: 'right' });

@@ -1,3 +1,6 @@
+
+
+
 <%- include('../partials/head') %>
 
 <h1>Weekly Batch Entry</h1>
@@ -13,9 +16,70 @@
   </form>
 </div>
 
+<!-- ===== IMPORT UBER / BOLT CSV : PANEL (paste 1) ===== -->
+<style>
+  .imp-body{padding:14px 16px;}
+  .imp-row{display:flex; gap:12px; flex-wrap:wrap; margin-bottom:12px;}
+  .imp-row .field{flex:1; min-width:170px;}
+  .imp-sel{min-width:230px; background:var(--surface-2); border:1px solid var(--line); border-radius:6px; padding:6px 8px; color:var(--text); font-size:13px;}
+  .imp-actions{display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-top:12px;}
+  .imp-msg{font-size:12.5px; color:var(--muted); margin-top:8px;}
+  .imp-msg.err{color:var(--danger);}
+  .imp-num{font-variant-numeric:tabular-nums; text-align:right; white-space:nowrap;}
+  .imp-sub{color:var(--muted); font-size:11.5px;}
+</style>
+<div class="panel" id="importPanel">
+  <div class="panel-head">
+    <h3>Import Uber / Bolt report (CSV)</h3>
+    <span class="badge info">Fills the boxes below — you can still edit every value</span>
+  </div>
+  <div class="imp-body">
+    <div class="imp-row">
+      <div class="field">
+        <label>Platform (auto-detected from the file)</label>
+        <select id="impPlatform">
+          <option value="uberGross">Uber</option>
+          <option value="boltGross">Bolt</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Report file (.csv)</label>
+        <input type="file" id="impFile" accept=".csv,.txt,text/csv">
+      </div>
+    </div>
+
+    <div id="impMapping" style="display:none;">
+      <div class="imp-row">
+        <div class="field"><label>Name column</label><select id="impColName"></select></div>
+        <div class="field"><label>2nd name column (optional)</label><select id="impColName2"></select></div>
+        <div class="field"><label>Phone column (optional)</label><select id="impColPhone"></select></div>
+        <div class="field"><label>Email column (optional)</label><select id="impColEmail"></select></div>
+        <div class="field"><label>Earnings column</label><select id="impColAmount"></select></div>
+      </div>
+
+      <div class="table-scroll">
+        <table class="imp-table">
+          <thead>
+            <tr><th>Name in report</th><th>Phone / Email</th><th>Amount</th><th>Driver in your app</th><th>Status</th></tr>
+          </thead>
+          <tbody id="impRows"></tbody>
+        </table>
+      </div>
+
+      <div class="imp-actions">
+        <button type="button" class="btn" id="impApply">Fill the table below</button>
+        <span id="impSummary" class="imp-msg" style="margin:0;"></span>
+      </div>
+    </div>
+    <div id="impMsg" class="imp-msg"></div>
+  </div>
+</div>
+<!-- ===== END PANEL ===== -->
+
 <div class="panel">
   <div class="panel-head">
-    <h3>Drivers — <%= new Date(from).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) %> – <%= new Date(to).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) %></h3>
+    
+    <h3>Drivers — <%= new Date(from).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'UTC' }) %> – <%= new Date(to).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'UTC' }) %></h3>
     <span class="badge info"><%= drivers.length %> active drivers</span>
   </div>
 
@@ -107,5 +171,314 @@
     });
   });
 </script>
+
+<!-- ===== IMPORT UBER / BOLT CSV : SCRIPT (paste 2) ===== -->
+<script id="impDriversData" type="application/json"><%- JSON.stringify(drivers.map(d => ({
+  id: d.id,
+  name: d.name,
+  email: d.email || '',
+  phone: d.phone || '',
+  plate: d.currentCar ? d.currentCar.plate : '',
+  saved: !!existingByDriver[d.id]
+}))).replace(/</g, '\\u003c') %></script>
+
+<script>
+(function () {
+  const DRIVERS = JSON.parse(document.getElementById('impDriversData').textContent);
+  const byId = {};
+  DRIVERS.forEach(d => { byId[d.id] = d; });
+
+  const $ = id => document.getElementById(id);
+  const elPlatform = $('impPlatform'), elFile = $('impFile'), elMapping = $('impMapping');
+  const elName = $('impColName'), elName2 = $('impColName2'), elPhone = $('impColPhone'),
+        elEmail = $('impColEmail'), elAmount = $('impColAmount');
+  const elRows = $('impRows'), elApply = $('impApply'), elSummary = $('impSummary'), elMsg = $('impMsg');
+
+  let table = [], header = [], groups = [];
+
+  // ---------- helpers ----------
+  function store(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) {} }
+  function load(key, fallback) { try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; } catch (e) { return fallback; } }
+
+  function norm(s) {
+    return String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+      .replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
+  }
+  function tokens(s) { return norm(s).split(' ').filter(Boolean); }
+  function sortedName(s) { return tokens(s).sort().join(' '); }
+  // last 9 digits, so "+351920004397" and "920004397" are the same phone
+  function phoneKey(p) { const d = String(p || '').replace(/\D/g, ''); return d.length >= 9 ? d.slice(-9) : ''; }
+  // lower-case, and "name+uber@gmail.com" is treated as "name@gmail.com"
+  function emailKey(e) { const s = String(e || '').trim().toLowerCase(); return s.indexOf('@') > 0 ? s.replace(/\+[^@]*@/, '@') : ''; }
+  function money(n) { return '€' + n.toFixed(2); }
+  function setMsg(text, isErr) { elMsg.textContent = text || ''; elMsg.className = 'imp-msg' + (isErr ? ' err' : ''); }
+
+  // ---------- CSV parsing (quotes, , ; or tab, BOM) ----------
+  function parseCSV(text) {
+    text = text.replace(/^\uFEFF/, '');
+    const firstLine = text.split(/\r?\n/)[0] || '';
+    let delim = ',', best = 0;
+    [',', ';', '\t'].forEach(d => { const n = firstLine.split(d).length; if (n > best) { best = n; delim = d; } });
+
+    const rows = [];
+    let row = [], cur = '', q = false;
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+      if (q) {
+        if (c === '"') { if (text[i + 1] === '"') { cur += '"'; i++; } else q = false; }
+        else cur += c;
+      } else if (c === '"') q = true;
+      else if (c === delim) { row.push(cur); cur = ''; }
+      else if (c === '\n' || c === '\r') {
+        if (c === '\r' && text[i + 1] === '\n') i++;
+        row.push(cur); cur = ''; rows.push(row); row = [];
+      } else cur += c;
+    }
+    if (cur !== '' || row.length) { row.push(cur); rows.push(row); }
+    return rows.filter(r => r.some(v => String(v).trim() !== ''));
+  }
+
+  // "1234.56", "1.234,56", "1,234.56", "€ 1 234,56", "(12,50)", "-12.5"
+  function parseAmount(v) {
+    let s = String(v == null ? '' : v).trim();
+    if (!s) return NaN;
+    const neg = s.indexOf('-') !== -1 || /^\(.*\)$/.test(s);
+    s = s.replace(/[^0-9.,]/g, '');
+    if (!s) return NaN;
+    const lastC = s.lastIndexOf(','), lastD = s.lastIndexOf('.');
+    if (lastC > -1 && lastD > -1) {
+      s = lastC > lastD ? s.replace(/\./g, '').replace(',', '.') : s.replace(/,/g, '');
+    } else if (lastC > -1) {
+      const multiple = s.indexOf(',') !== lastC;
+      const after = s.length - lastC - 1;
+      s = (multiple || after === 3) ? s.replace(/,/g, '') : s.replace(',', '.');
+    } else if (lastD > -1 && s.indexOf('.') !== lastD) {
+      s = s.replace(/\./g, '');
+    }
+    const n = Number(s);
+    return isNaN(n) ? NaN : (neg ? -n : n);
+  }
+
+  // ---------- driver matching: remembered → phone → email → exact name → (careful) partial name ----------
+  function findDriver(g, alias) {
+    if (alias[g.key] && byId[alias[g.key]]) return { id: alias[g.key], type: 'remembered' };
+
+    const ph = phoneKey(g.phone), em = emailKey(g.email), nm = norm(g.name);
+    let m;
+    if (ph) { m = DRIVERS.filter(d => phoneKey(d.phone) === ph); if (m.length === 1) return { id: m[0].id, type: 'phone' }; }
+    if (em) { m = DRIVERS.filter(d => emailKey(d.email) === em); if (m.length === 1) return { id: m[0].id, type: 'email' }; }
+    if (nm) {
+      const sn = sortedName(g.name);
+      m = DRIVERS.filter(d => norm(d.name) === nm || sortedName(d.name) === sn);
+      if (m.length === 1) return { id: m[0].id, type: 'name' };
+    }
+    // Partial-name guess ONLY when the report row has no phone and no email (too risky otherwise:
+    // many drivers are called "MD …"). Shown as "Check match" so you confirm it.
+    if (nm && !ph && !em) {
+      const kt = tokens(g.name);
+      m = DRIVERS.filter(d => {
+        const dt = tokens(d.name);
+        if (Math.min(dt.length, kt.length) < 2) return false;
+        const [small, big] = dt.length <= kt.length ? [dt, kt] : [kt, dt];
+        return small.every(t => big.indexOf(t) !== -1);
+      });
+      if (m.length === 1) return { id: m[0].id, type: 'check' };
+    }
+    return { id: '', type: '' };
+  }
+
+  // ---------- columns ----------
+  function fillSelect(sel, withNone) {
+    sel.innerHTML = '';
+    if (withNone) { const o = document.createElement('option'); o.value = ''; o.textContent = '— none —'; sel.appendChild(o); }
+    header.forEach((h, i) => {
+      const o = document.createElement('option');
+      o.value = String(i);
+      o.textContent = (h && h.trim()) ? h.trim() : 'Column ' + (i + 1);
+      sel.appendChild(o);
+    });
+  }
+  const NOT_NAME = /email|e mail|phone|telefone|telemovel|identifier|numero|uuid|hora|taxa|rate|hour/;
+  function guess(regexes, exclude) {
+    for (const re of regexes) {
+      const i = header.findIndex(h => { const n = norm(h); return re.test(n) && !(exclude && exclude.test(n)); });
+      if (i > -1) return i;
+    }
+    return -1;
+  }
+  function indexOfHeader(name) { return name ? header.findIndex(h => h.trim() === name) : -1; }
+  function setIf(sel, idx) { sel.value = idx > -1 ? String(idx) : ''; }
+
+  function detectPlatform() {
+    const all = norm(header.join(' '));
+    if (/rendimentos totais|nome proprio/.test(all)) return 'uberGross';
+    if (/gross earnings|driver identifier/.test(all)) return 'boltGross';
+    return '';
+  }
+
+  function setDefaultColumns() {
+    const saved = load('fm_imp_map2_' + elPlatform.value, null) || {};
+    let n = indexOfHeader(saved.name), n2 = indexOfHeader(saved.name2), p = indexOfHeader(saved.phone),
+        e = indexOfHeader(saved.email), a = indexOfHeader(saved.amount);
+    if (n < 0)  n  = guess([/^(driver|name|nome|motorista)$/, /nome proprio|first name|given name|primeiro nome/, /motorista|driver|name|nome/], NOT_NAME);
+    if (n2 < 0 && !saved.name) n2 = guess([/apelido|surname|last name|ultimo nome/]);
+    if (p < 0 && !saved.phone) p = guess([/phone|telefone|telemovel/]);
+    if (e < 0 && !saved.email) e = guess([/e mail|email/]);
+    if (a < 0)  a  = guess([/gross earnings total/, /rendimentos totais/, /gross|brut/, /earn|ganho|rendimento/, /total/], /hora|hour/);
+    elName.value = String(n > -1 ? n : 0);
+    setIf(elName2, n2); setIf(elPhone, p); setIf(elEmail, e);
+    elAmount.value = String(a > -1 ? a : Math.min(1, header.length - 1));
+  }
+
+  // ---------- preview ----------
+  function cell(r, sel) { return sel.value === '' ? '' : String(r[Number(sel.value)] || '').trim(); }
+
+  function buildGroups() {
+    const alias = load('fm_imp_alias_' + elPlatform.value, {});
+    const map = new Map();
+    let ignored = 0;
+    table.slice(1).forEach(r => {
+      const name = (cell(r, elName) + ' ' + cell(r, elName2)).trim();
+      const phone = cell(r, elPhone), email = cell(r, elEmail);
+      const amt = parseAmount(r[Number(elAmount.value)]);
+      const key = phoneKey(phone) || emailKey(email) || norm(name);
+      if (!key || isNaN(amt) || /^(total|totals|subtotal|total geral|grand total)$/.test(norm(name))) { ignored++; return; }
+      if (!map.has(key)) map.set(key, { key, name, phone, email, count: 0, total: 0 });
+      const g = map.get(key); g.count++; g.total += amt;
+    });
+
+    groups = Array.from(map.values()).map(g => {
+      const f = findDriver(g, alias);
+      const savedAlready = f.id && byId[f.id].saved;
+      return { ...g, driverId: savedAlready ? '' : f.id, type: f.type, savedAlready: !!savedAlready };
+    });
+    return ignored;
+  }
+
+  function renderPreview() {
+    if (!table.length) return;
+    const ignored = buildGroups();
+    elRows.innerHTML = '';
+    groups.forEach(g => {
+      const tr = document.createElement('tr');
+
+      const tdName = document.createElement('td'); tdName.textContent = g.name || g.email || g.phone;
+
+      const tdId = document.createElement('td'); tdId.className = 'imp-sub';
+      tdId.textContent = [g.phone, g.email].filter(Boolean).join(' · ');
+
+      const tdAmt = document.createElement('td'); tdAmt.className = 'imp-num';
+      tdAmt.textContent = money(g.total) + (g.count > 1 ? ' (' + g.count + ' rows)' : '');
+
+      const tdSel = document.createElement('td');
+      const sel = document.createElement('select'); sel.className = 'imp-sel';
+      const none = document.createElement('option'); none.value = ''; none.textContent = '— skip this row —'; sel.appendChild(none);
+      DRIVERS.forEach(d => {
+        const o = document.createElement('option');
+        o.value = d.id;
+        o.textContent = d.name + (d.plate ? ' (' + d.plate + ')' : '') + (d.saved ? ' — already saved' : '');
+        if (d.saved) o.disabled = true;
+        sel.appendChild(o);
+      });
+      sel.value = g.driverId;
+      tdSel.appendChild(sel);
+
+      const tdStatus = document.createElement('td');
+      const badge = document.createElement('span'); badge.className = 'badge'; tdStatus.appendChild(badge);
+
+      function refreshBadge() {
+        if (g.savedAlready && !sel.value) { badge.className = 'badge info'; badge.textContent = 'Already saved this week'; }
+        else if (sel.value && sel.value === g.driverId && g.type === 'check') { badge.className = 'badge warn'; badge.textContent = 'Check match'; }
+        else if (sel.value && sel.value === g.driverId && g.type) { badge.className = 'badge ok'; badge.textContent = 'Matched · ' + g.type; }
+        else if (sel.value) { badge.className = 'badge ok'; badge.textContent = 'Chosen by you'; }
+        else { badge.className = 'badge warn'; badge.textContent = 'Choose driver'; }
+      }
+      sel.addEventListener('change', () => { g.driverId = sel.value; refreshBadge(); });
+      refreshBadge();
+
+      tr.append(tdName, tdId, tdAmt, tdSel, tdStatus);
+      elRows.appendChild(tr);
+    });
+
+    if (!groups.length) {
+      const tr = document.createElement('tr'), td = document.createElement('td');
+      td.colSpan = 5; td.className = 'empty-row';
+      td.textContent = 'No usable rows. Check the Name / Phone / Email and Earnings columns above.';
+      tr.appendChild(td); elRows.appendChild(tr);
+    }
+    elSummary.textContent = '';
+    const unmatched = groups.filter(g => !g.driverId && !g.savedAlready).length;
+    setMsg(groups.length + ' driver(s) in the report' + (ignored ? ' · ' + ignored + ' row(s) ignored' : '') +
+      (unmatched ? ' · ' + unmatched + ' not matched yet (pick the driver, or leave as skip)' : '') +
+      '. Check the matches, then press "Fill the table below".');
+  }
+
+  // ---------- apply ----------
+  function applyToTable() {
+    const field = elPlatform.value;
+    const alias = load('fm_imp_alias_' + field, {});
+    const perDriver = {};
+    let reportTotal = 0, skippedTotal = 0, skippedRows = 0;
+
+    groups.forEach(g => {
+      reportTotal += g.total;
+      if (!g.driverId) { skippedTotal += g.total; skippedRows++; return; }
+      perDriver[g.driverId] = (perDriver[g.driverId] || 0) + g.total;
+      alias[g.key] = g.driverId; // remember for next week
+    });
+    store('fm_imp_alias_' + field, alias);
+
+    let filled = 0, appliedTotal = 0;
+    Object.keys(perDriver).forEach(id => {
+      const input = document.querySelector('.batch-table input[data-row="' + id + '"][data-k="' + field + '"]');
+      if (!input) return;
+      input.value = (Math.round(perDriver[id] * 100) / 100).toFixed(2);
+      input.dispatchEvent(new Event('input', { bubbles: true })); // refresh "Net (est.)"
+      filled++; appliedTotal += perDriver[id];
+    });
+
+    const h = sel => sel.value === '' ? '' : (header[Number(sel.value)] || '');
+    store('fm_imp_map2_' + field, { name: h(elName), name2: h(elName2), phone: h(elPhone), email: h(elEmail), amount: h(elAmount) });
+
+    const label = field === 'uberGross' ? 'Uber' : 'Bolt';
+    elSummary.textContent = label + ': filled ' + filled + ' driver(s) with ' + money(appliedTotal) +
+      ' (report total ' + money(reportTotal) + (skippedRows ? '; ' + skippedRows + ' row(s) skipped = ' + money(skippedTotal) : '') + '). ' +
+      'Review the table below, edit if needed, then press "Calculate & Save All".';
+    const form = document.getElementById('batchForm');
+    if (form && form.scrollIntoView) form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  // ---------- events ----------
+  elFile.addEventListener('change', () => {
+    const f = elFile.files && elFile.files[0];
+    table = []; header = []; groups = []; elRows.innerHTML = ''; elSummary.textContent = '';
+    elMapping.style.display = 'none'; setMsg('');
+    if (!f) return;
+    if (/\.xlsx?$/i.test(f.name)) { setMsg('Excel files are not supported — open it in Excel and use Save As → CSV, then upload that.', true); return; }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      table = parseCSV(String(reader.result || ''));
+      if (table.length < 2) { setMsg('Could not read any rows from this file.', true); return; }
+      header = table[0].map(h => String(h || ''));
+      [elName, elPhone, elEmail, elAmount].forEach(s => fillSelect(s, false));
+      fillSelect(elName2, true); fillSelect(elPhone, true); fillSelect(elEmail, true);
+      const detected = detectPlatform();
+      if (detected) elPlatform.value = detected;
+      setDefaultColumns();
+      elMapping.style.display = 'block';
+      renderPreview();
+      if (detected) setMsg('Detected ' + (detected === 'uberGross' ? 'an Uber' : 'a Bolt') + ' report. ' + elMsg.textContent);
+    };
+    reader.onerror = () => setMsg('Could not read the file.', true);
+    reader.readAsText(f);
+  });
+
+  [elName, elName2, elPhone, elEmail, elAmount].forEach(el => el.addEventListener('change', renderPreview));
+  elPlatform.addEventListener('change', () => { if (table.length) { setDefaultColumns(); renderPreview(); } });
+  elApply.addEventListener('click', applyToTable);
+})();
+</script>
+<!-- ===== END SCRIPT ===== -->
 
 <%- include('../partials/foot') %>
