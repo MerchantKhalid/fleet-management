@@ -31,7 +31,12 @@ function toDateInputValue(d) {
   return d.toISOString().slice(0, 10);
 }
 
-const BATCH_FIELDS = ['uberGross', 'boltGross', 'fleetCharge', 'fuelElectricCost', 'viaVerde', 'otherDeductions'];
+
+// Default weekly fleet charge for every car. Change this one number any time.
+const DEFAULT_FLEET_CHARGE = 25;
+
+// fleetCharge is NOT here on purpose: it is pre-filled, so it must not count as "driver has data".
+const BATCH_FIELDS = ['uberGross', 'boltGross', 'fuelElectricCost', 'viaVerde', 'otherDeductions'];
 
 // LIST + ADD FORM
 router.get('/', async (req, res) => {
@@ -56,7 +61,9 @@ router.get('/', async (req, res) => {
       : Promise.resolve([]),
     prisma.driver.findMany({ where: { status: 'ACTIVE' }, include: { currentCar: true } }),
   ]);
-  res.render('settlements/index', { settlements, drivers, from: from || '', to: to || '', hasFilter });
+
+
+    res.render('settlements/index', { settlements, drivers, from: from || '', to: to || '', hasFilter, defaultFleetCharge: DEFAULT_FLEET_CHARGE });
 });
 
 // CREATE (calculates + saves + creates linked IVA refund)
@@ -92,7 +99,8 @@ router.get('/batch', async (req, res) => {
   const existingByDriver = {};
   existing.forEach(s => { existingByDriver[s.driverId] = s; });
 
-  res.render('settlements/batch', { drivers, from, to, existingByDriver });
+  
+    res.render('settlements/batch', { drivers, from, to, existingByDriver, defaultFleetCharge: DEFAULT_FLEET_CHARGE });
 });
 
 router.post('/batch', async (req, res) => {

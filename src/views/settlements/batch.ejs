@@ -123,7 +123,8 @@
             <% } else { %>
               <td><input type="number" step="0.01" value="0" data-row="<%= d.id %>" data-k="uberGross" name="drivers[<%= d.id %>][uberGross]"></td>
               <td><input type="number" step="0.01" value="0" data-row="<%= d.id %>" data-k="boltGross" name="drivers[<%= d.id %>][boltGross]"></td>
-              <td><input type="number" step="0.01" value="0" data-row="<%= d.id %>" data-k="fleetCharge" name="drivers[<%= d.id %>][fleetCharge]"></td>
+              
+              <td><input type="number" step="0.01" value="<%= defaultFleetCharge %>" data-row="<%= d.id %>" data-k="fleetCharge" name="drivers[<%= d.id %>][fleetCharge]"></td>
               <td><input type="number" step="0.01" value="0" data-row="<%= d.id %>" data-k="fuelElectricCost" name="drivers[<%= d.id %>][fuelElectricCost]"></td>
               <td><input type="number" step="0.01" value="0" data-row="<%= d.id %>" data-k="viaVerde" name="drivers[<%= d.id %>][viaVerde]"></td>
               <td><input type="number" step="0.01" value="0" data-row="<%= d.id %>" data-k="otherDeductions" name="drivers[<%= d.id %>][otherDeductions]"></td>
@@ -160,15 +161,21 @@
     return round2(g - (row.fleetCharge || 0) - iva - (row.fuelElectricCost || 0) - (row.viaVerde || 0) - (row.otherDeductions || 0));
   }
 
-  const rows = {};
+    const rows = {};
   document.querySelectorAll('.batch-table input[data-row]').forEach(inp => {
     const id = inp.dataset.row;
-    (rows[id] = rows[id] || {})[inp.dataset.k] = 0;
+    // start from the input's current value (so the pre-filled 25 counts)
+    (rows[id] = rows[id] || {})[inp.dataset.k] = Number(inp.value) || 0;
     inp.addEventListener('input', () => {
       rows[id][inp.dataset.k] = Number(inp.value) || 0;
       const netEl = document.getElementById('net-' + id);
       if (netEl) netEl.textContent = '€' + calcNet(rows[id]).toFixed(2);
     });
+  });
+  // show the correct starting Net (est.) for every row
+  Object.keys(rows).forEach(id => {
+    const netEl = document.getElementById('net-' + id);
+    if (netEl) netEl.textContent = '€' + calcNet(rows[id]).toFixed(2);
   });
 </script>
 
